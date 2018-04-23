@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    restart: always
+    ports:
+      - "10080:80"
+      - "10443:443"
+      - "10022:22"
+    volumes:
+      - /var/opt/gitlab/config:/etc/gitlab
+      - /var/opt/gitlab/logs:/var/log/gitlab
+      - /var/opt/gitlab/data:/var/opt/gitlab
