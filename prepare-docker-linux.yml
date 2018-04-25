@@ -1,13 +1,7 @@
 ---
-- hosts: "{{host}}"
-  become: true
-  gather_facts: true
+  - name: Update apt cache if needed.
+    apt: update_cache=yes cache_valid_time=3600
 
-  pre_tasks:
-    - name: Update apt cache if needed.
-      apt: update_cache=yes cache_valid_time=3600
-
-  tasks:
   - name: update apt and autoremove
     apt:
       update_cache: yes
@@ -86,7 +80,7 @@
 
   - name: Install Docker Compose (if configured).
     get_url:
-      url: https://github.com/docker/compose/releases/download/1.15.0/docker-compose-Linux-x86_64
+      url: https://github.com/docker/compose/releases/download/1.21.0/docker-compose-Linux-x86_64
       dest: /usr/local/bin/docker-compose
       mode: 0755
 

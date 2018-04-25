@@ -50,6 +50,27 @@ To achieve a fully comprehensible setup here, we some DevOps tools FTW:
 * Ansible: This shiny pice will contain __ALL__ steps necessary to provision a Gitlab server with __everything__ needed. It´s also a great documentation what´s needed to setup a Gitlab server.
 * Vagrant: To just fire up a server locally that is based on a certain OS - because that´s needed to craft a Ansible playbook. But this is just for demonstration purposes - you can switch over to your Gitlab server by just editing the [hostsfile](hostsfile) and adding `[yourcompanygitlab]` together with it´s IP.
 
+So let´s go: Fire up our server with:
+
+```
+vagrant up
+```
+
+If the server is up and running (this may take a while when doing it for the first time), we can execute Ansible. 
+
+Let´s do a connection check first. Only at the first run, we also need to surround the `ping` with those environment variables:
+
+```
+export ANSIBLE_HOST_KEY_CHECKING=False
+ansible docker-ci-stack -i hostsfile -m ping
+unset ANSIBLE_HOST_KEY_CHECKING
+```
+
+If this gave a `SUCCESS`, we can move on to really execute our ansible script (from the second run on you can start here!):
+
+```
+ansible-playbook -i hostsfile prepare-gitlab.yml
+```
 
 
 # Links
