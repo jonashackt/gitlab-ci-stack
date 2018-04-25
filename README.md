@@ -86,6 +86,15 @@ Now just grab a coffee. If you return to your machine, enter the http://localhos
 ![running-gitlab](running-gitlab.png)
 
 
+## Install & configure Gitlab Docker Runner
+
+The [gitlab-runner.yml](gitlab-runner.yml) shows how to install and register the Gitlab Docker Runner in non-interactive mode:
+
+As https://docs.gitlab.com/runner/install/linux-repository.html#installing-the-runner states, we need to add the Gitlab Runner package repository and install the Runner via apt-get.
+
+Before we´re able to register the Runner, we need to extract the Registration Token somehow automatically from our Gitlab instance. Since there´s no API at the moment (see https://gitlab.com/gitlab-org/gitlab-ce/issues/24030, https://gitlab.com/gitlab-org/gitlab-runner/issues/1727), we need to obtain it quite hacky through a database call.
+
+The last step then is to register the Gitlab Docker Runner in [non-interactive mode](https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/commands/README.md#non-interactive-registration).
 
 # Links
 

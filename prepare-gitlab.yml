@@ -17,3 +17,6 @@
     include_tasks: install-gitlab.yml
     tags: install_gitlab
 
+  - name: Install & Configure Gitlab Runner for Docker
+    include_tasks: gitlab-runner.yml
+    tags: gitlab_runner
