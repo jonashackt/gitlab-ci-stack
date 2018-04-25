@@ -1,0 +1,98 @@
+---
+- hosts: "{{host}}"
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Update apt cache if needed.
+      apt: update_cache=yes cache_valid_time=3600
+
+  tasks:
+  - name: update apt and autoremove
+    apt:
+      update_cache: yes
+      cache_valid_time: 3600
+      autoremove: yes
+
+  - name: Install linux-image-extra-* for Ubuntu Trusty 14.04 (see https://docs.docker.com/engine/installation/linux/ubuntu/#recommended-extra-packages-for-trusty-1404)
+    apt:
+      name: linux-image-extra-3.13.0-106-generic
+      state: latest
+    become: true
+
+  - name: Install linux-image-extra-* for Ubuntu Trusty 14.04 (see https://docs.docker.com/engine/installation/linux/ubuntu/#recommended-extra-packages-for-trusty-1404)
+    apt:
+      name: linux-image-extra-virtual
+      state: latest
+    become: true
+
+  - name: Install apt-transport-https (see https://docs.docker.com/engine/installation/linux/ubuntu/#recommended-extra-packages-for-trusty-1404)
+    apt:
+      name: apt-transport-https
+      state: latest
+    become: true
+
+  - name: Install ca-certificates (see https://docs.docker.com/engine/installation/linux/ubuntu/#recommended-extra-packages-for-trusty-1404)
+    apt:
+      name: ca-certificates
+      state: latest
+    become: true
+
+  - name: Install software-properties-common (see https://docs.docker.com/engine/installation/linux/ubuntu/#recommended-extra-packages-for-trusty-1404)
+    apt:
+      name: software-properties-common
+      state: latest
+    become: true
+
+  - name: Add Docker apt key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+      state: present
+    register: add_repository_key
+    ignore_errors: true
+
+  - name: Ensure curl is present (on older systems without SNI).
+    apt:
+      name: curl
+      state: latest
+    become: true
+    when: add_repository_key|failed
+
+  - name: Add Docker apt key (alternative for older systems without SNI).
+    shell: "curl -sSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -"
+    args:
+      warn: no
+    when: add_repository_key|failed
+
+  - name: Add docker apt repo
+    apt_repository:
+      repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ansible_lsb.codename}} edge"
+      update_cache: yes
+    become: true
+
+  - name: Install Docker apt package
+    apt:
+      pkg: docker-ce
+      state: latest
+      update_cache: yes
+    become: true
+
+  - name: Ensure Docker service is installed and restarted
+    service:
+      name: docker
+      state: restarted
+      enabled: yes
+
+  - name: Install Docker Compose (if configured).
+    get_url:
+      url: https://github.com/docker/compose/releases/download/1.15.0/docker-compose-Linux-x86_64
+      dest: /usr/local/bin/docker-compose
+      mode: 0755
+
+  - name: Add vagrant user to docker group.
+    user:
+      name: vagrant
+      groups: docker
+      append: yes
+    become: true

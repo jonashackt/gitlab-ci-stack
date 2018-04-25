@@ -1,0 +1,20 @@
+---
+- hosts: all
+
+  tasks:
+  - name: Checking Ansible connectivity to Windows nodes
+    win_ping:
+    when: inventory_hostname in groups['windows']
+
+  - name: Checking Ansible connectivity to Linux nodes
+    ping:
+    when: inventory_hostname in groups['linux']
+
+- name: Prepare Docker on Windows nodes
+  import_playbook: "../step1-prepare-docker-windows/prepare-docker-windows.yml host=windows"
+
+- name: Prepare Docker on Linux nodes
+  import_playbook: prepare-docker-linux.yml host=linux
+
+- name: Allow local http Docker registry
+  import_playbook: allow-http-docker-registry.yml
