@@ -1,4 +1,7 @@
-# docker-ci-stack
+docker-ci-stack
+======================================================================================
+[![Build Status](https://travis-ci.org/jonashackt/docker-ci-stack.svg?branch=master)](https://travis-ci.org/jonashackt/docker-ci-stack)
+
 Full CI pipeline project based on Docker running Gitlab &amp; Gitlab CI, Artifactory, SonarQube fascilitating the Docker Builder Pattern
 
 This project is somehow based on the thought of https://github.com/marcelbirkner/docker-ci-tool-stack. But since the good old days of Jenkins times changed "a bit". Maybe today Jenkins incl. 2.x/Pipeline-plugin isn´t the way to go - or it´s just the way, if you really want to have a hard time. Why? Here are some points:
