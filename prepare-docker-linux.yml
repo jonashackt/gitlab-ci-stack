@@ -1,7 +1,4 @@
 ---
-  - name: Update apt cache if needed.
-    apt: update_cache=yes cache_valid_time=3600
-
   - name: update apt and autoremove
     apt:
       update_cache: yes

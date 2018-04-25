@@ -2,10 +2,18 @@
 - hosts: all
   become: true
 
+  vars:
+    gitlab_url: "http://localhost"
+
   tasks:
   - name: Checking Ansible connectivity to Linux nodes
     ping:
 
-  - name: Prepare Docker on Linux nodes
-    include_tasks: prepare-docker-linux.yml host=linux
+  - name: Prepare Docker on Linux node
+    include_tasks: prepare-docker-linux.yml
+    tags: install_docker
+
+  - name: Install Gitlab on Linux node
+    include_tasks: install-gitlab.yml
+    tags: install_gitlab
 

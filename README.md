@@ -17,6 +17,8 @@ I heard from so many colleagues:
 
 > "Hey Jonas you Jenkins fanboy. Have a look on all those cool new CI servers like Concourse, Circle CI oder even Gitlab CI! We don´t know, why you´re messing around with Jenkins..." .
 
+## Which one to choose?
+
 Well, ok then. Let´s give it a try. And because of all this here:
 
 https://www.digitalocean.com/community/tutorials/ci-cd-tools-comparison-jenkins-gitlab-ci-buildbot-drone-and-concourse
@@ -74,6 +76,11 @@ If this gave a `SUCCESS`, we can move on to really execute our ansible script (f
 ```
 ansible-playbook -i hostsfile prepare-gitlab.yml
 ```
+
+Now just grab a coffee. If you return to your machine, enter the http://localhost:30080 and your Gitlab should be running fine:
+
+![running-gitlab](running-gitlab.png)
+
 
 
 # Links

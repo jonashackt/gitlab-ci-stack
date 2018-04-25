@@ -1,7 +1,7 @@
 # Prepare Gitlab on a Server (here Vagrant)
 ansible-playbook -i hostsfile prepare-gitlab.yml
 
-# Only prepare base image springboot-oraclejre-nanoserver
-ansible-playbook -i hostsfile prepare-docker-nodes.yml --tags "baseimage"
+# Only install Gitlab on the server (skip Docker installation)
+ansible-playbook -i hostsfile prepare-gitlab.yml --skip-tags "install_docker"
 
 

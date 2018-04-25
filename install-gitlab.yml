@@ -1,0 +1,54 @@
+---
+  # See https://about.gitlab.com/installation/#ubuntu for the installation docs
+  # all the necessary steps are executed in this script here
+  - name: update apt and autoremove
+    apt:
+      update_cache: yes
+      cache_valid_time: 3600
+      autoremove: yes
+
+  - name: Install curl
+    apt:
+      name: curl
+      state: latest
+
+  - name: Install openssh-server
+    apt:
+      name: openssh-server
+      state: latest
+
+  - name: Install ca-certificates
+    apt:
+      name: ca-certificates
+      state: latest
+
+  - name: Install Postfix to send notification emails
+    apt:
+      name: postfix
+      state: latest
+
+  - name: Add the GitLab package repository
+    shell: "curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | sudo bash"
+
+  - name: Install Gitlab
+    apt:
+      name: gitlab-ce
+      state: latest
+    environment:
+      EXTERNAL_URL: gitlab_url
+
+  - name: Wait for Gitlab to start up
+    wait_for:
+      port: 80
+      delay: 10
+      sleep: 5
+
+  - name: Let´s check, if Gitlab is up and running
+    uri:
+      url: "{{gitlab_url}}"
+
+  - debug:
+      msg: "Your Gitlab instance is ready at your Vagrant host machine http://localhost:30080"
+
+
+
