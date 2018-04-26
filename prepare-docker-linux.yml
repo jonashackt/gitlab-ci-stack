@@ -11,7 +11,7 @@
       state: latest
     become: true
 
-  - name: Install linux-image-extra-* for Ubuntu Trusty 14.04 (see https://docs.docker.com/engine/installation/linux/ubuntu/#recommended-extra-packages-for-trusty-1404)
+  - name: Install linux-image-extra-virtual for Ubuntu Trusty 14.04 (see https://docs.docker.com/engine/installation/linux/ubuntu/#recommended-extra-packages-for-trusty-1404)
     apt:
       name: linux-image-extra-virtual
       state: latest
