@@ -96,6 +96,71 @@ Before we´re able to register the Runner, we need to extract the Registration T
 
 The last step then is to register the Gitlab Docker Runner in [non-interactive mode](https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/commands/README.md#non-interactive-registration).
 
+
+## Nice Gitlab URL with DNS configuration
+
+We don´t want to access Gitlab via a http://locahost:30080 call - instead we want to have something like http://docker.gitlab.ci!
+
+To enable that on the Host machine, we need the [vagrant-dns Plugin](https://github.com/BerlinVagrant/vagrant-dns). Just install it with:
+
+```
+vagrant plugin install vagrant-dns
+```
+
+Now we configure a domain name as `gitlab` in our Vagrantfile:
+
+```
+masterlinux.vm.hostname = "gilab"
+
+masterlinux.dns.tld = "ci"
+```
+
+Now we need to register the vagrant-dns Server with the TLD `ci` as a DNS resolver:
+
+```
+vagrant dns --install
+```
+
+Now check with `scutil --dns` (on a Mac), if the resolver is part of your DNS configuration:
+
+```
+...
+
+resolver #10
+  domain   : ci
+  nameserver[0] : 127.0.0.1
+  port     : 5300
+  flags    : Request A records, Request AAAA records
+  reach    : 0x00030002 (Reachable,Local Address,Directly Reachable Address)
+
+...
+```
+
+This looks good! Now try, if you´re able to reach our Vagrant Box using our defined domain by typing e.g. `dscacheutil -q host -a name docker.gitlab.ci`:
+
+```
+$:docker-ci-stack jonashecht$ dscacheutil -q host -a name docker.gitlab.ci
+  name: docker.gitlab.ci
+  ip_address: 172.16.2.15
+```
+
+
+But as we want to have the nice `docker.gitlab.ci` also available inside our Vagrant Box and the [vagrant-dns Plugin](https://github.com/BerlinVagrant/vagrant-dns) doesn´t support propagating the host´s DNS resolver to the Vagrant Boxes, we have a problem.
+ 
+But luckily we have [VirtualBox as a virtualization provider for Vagrant](https://www.vagrantup.com/docs/virtualbox/common-issues.html), which supports the propagation of the host´s DNS resolver to the guest machines. All we have to do, is to use [this suggestion on serverfault](https://serverfault.com/a/506206/326340):, which will 'Using the host's resolver as a DNS proxy in NAT mode':
+
+```
+# Forward DNS resolver from host (vagrant dns) to box
+virtualbox.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+```
+
+After we configured that, we can do our well-known `vagrant up`.
+
+
+Now just open up your Browser and go to `docker.gitlab.ci`
+
+
+
 # Links
 
 * Gitlab CI REFERENCE docs: https://docs.gitlab.com/ce/ci/yaml/README.html

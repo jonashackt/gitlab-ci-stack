@@ -1,7 +1,13 @@
 Vagrant.configure("2") do |config|
 
     config.vm.box = "ubuntu/trusty64"
-    config.vm.hostname = "docker-ci-stack"
+    config.vm.hostname = "gitlab"
+    # Register domain ci for later access prettiness
+    config.dns.tld = "ci"
+
+    # As to https://www.vagrantup.com/docs/multi-machine/ & https://www.vagrantup.com/docs/networking/private_network.html
+    # we need to configure a private network, so that our machines are able to talk to one another
+    config.vm.network "private_network", ip: "172.16.2.15"
 
     # Forwarding the port for Ansible explicitely to not run into Vagrants 'Port Collisions and Correction'
     # see https://www.vagrantup.com/docs/networking/forwarded_ports.html, which would lead to problems with Ansible later
@@ -14,6 +20,8 @@ Vagrant.configure("2") do |config|
         virtualbox.cpus = 2
         virtualbox.customize ["modifyvm", :id, "--ioapic", "on"]
         virtualbox.customize ["modifyvm", :id, "--vram", "32"]
+        # Forward DNS resolver from host (vagrant dns) to box
+        virtualbox.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
     end
 
     # Forwarding the Guest to Host ports, so that we can access it easily from outside the VM
