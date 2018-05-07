@@ -41,7 +41,7 @@
       name: gitlab-ce
       state: latest
     environment:
-      EXTERNAL_URL: gitlab_url
+      EXTERNAL_URL: "{{gitlab_url}}"
 
   - name: Wait for Gitlab to start up
     wait_for:

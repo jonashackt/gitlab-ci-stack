@@ -57,6 +57,8 @@ To achieve a fully comprehensible setup here, we some DevOps tools FTW:
 
 ## Let´s install & run Gitlab inside our Server/VagrantBox with Ansible
 
+> All the Installation process is based upon the "Omnibus GitLab installation" (NOT the from source option)
+
 So let´s go: Fire up our server with:
 
 ```
@@ -107,10 +109,10 @@ To enable that on the Host machine, we need the [vagrant-dns Plugin](https://git
 vagrant plugin install vagrant-dns
 ```
 
-Now we configure a domain name as `gitlab` in our Vagrantfile:
+Now we configure a domain name as `pipeline` in our Vagrantfile:
 
 ```
-masterlinux.vm.hostname = "gilab"
+masterlinux.vm.hostname = "pipeline"
 
 masterlinux.dns.tld = "ci"
 ```
@@ -136,11 +138,11 @@ resolver #10
 ...
 ```
 
-This looks good! Now try, if you´re able to reach our Vagrant Box using our defined domain by typing e.g. `dscacheutil -q host -a name docker.gitlab.ci`:
+This looks good! Now after the usual `vagrant up`, try if you´re able to reach our Vagrant Box using our defined domain by typing e.g. `dscacheutil -q host -a name gitlab.pipeline.ci`:
 
 ```
-$:docker-ci-stack jonashecht$ dscacheutil -q host -a name docker.gitlab.ci
-  name: docker.gitlab.ci
+$:docker-ci-stack jonashecht$ dscacheutil -q host -a name gitlab.pipeline.ci
+  name: gitlab.pipeline.ci
   ip_address: 172.16.2.15
 ```
 
@@ -159,6 +161,49 @@ After we configured that, we can do our well-known `vagrant up`.
 
 Now just open up your Browser and go to `docker.gitlab.ci`
 
+
+## Enable https for Gitlab
+
+https://docs.gitlab.com/omnibus/settings/nginx.html#enable-https
+
+> From 10.7 we will automatically use [Let's Encrypt certificates if the external_url specifies https](https://docs.gitlab.com/omnibus/settings/ssl.html#let-39-s-encrypt-integration)), the certificate files are absent, and the embedded nginx will be used to terminate ssl connections.
+
+__BUT__: The problem is our local setup here: Let´s Encrypt wont be able to validate the certificate for our domain, since it´s just a local DNS installation.
+
+That sounds like we´re in need of a different way. Because if we just use our domain with https like https://gitlab.pipeline.ci/, our Browser will complain:
+
+![insecure-https](insecure-https.png)
+
+and a `git push` will result into the following problem:
+
+```
+$ git push
+fatal: unable to access 'https://gitlab.pipeline.ci/root/yourRepoNameHere/': SSL certificate problem: self signed certificate
+```
+
+Although Let´s Encrypt was designed to be used with public accessable websites, there are ways to create these Certificates for non-public servers also. All you need to have is a __regularly registered domain__ - which maybe sounds like a big issue, but isn´t really a problem! (don´t try to use already registered ones, this won´t work!)
+
+If you don´t mind about the tld, choose something like `yourDomainName.yxz` or `yourDomainName.online`, which are available from 1$/year. Just be sure to pick [one from this provider list](https://github.com/AnalogJ/lexicon#providers). 
+
+> There has been done some great work in the field of generating Let´s Encrypt certificates for private servers (see https://blog.thesparktree.com/generating-intranet-and-private-network-ssl)
+
+
+
+
+
+
+
+
+So let´s try to create the certificates ourselfes and [configure HTTPS in Gitlab manually](https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/nginx.md#manually-configuring-https).
+
+
+
+
+## Gitlab Container Registry
+
+https://docs.gitlab.com/ee/user/project/container_registry.html
+
+[Gitlab Container Registry domain configuration](https://docs.gitlab.com/ee/administration/container_registry.html#container-registry-domain-configuration)
 
 
 # Links
