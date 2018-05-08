@@ -4,8 +4,7 @@
 
   vars:
     gitlab_url: "http://gitlab.pipeline.ci"
-    internal_server: true
-
+    https_internal_server: false
 
   tasks:
   - name: Checking Ansible connectivity to Linux nodes
@@ -19,19 +18,11 @@
     include_tasks: install-gitlab.yml
     tags: install_gitlab
 
-  - name: Prepare Let´s Encrypt for Gitlab - externally accessable server
-    include_tasks: letsencrypt-externally-accessable-server.yml
-    vars:
-      letsencrypt_mailadress: "gitlab.pipeline@mail.com"
-      gitlab_domain: "pipeline.ci"
-    when: not internal_server
-    tags: letsencrypt
-
-  - name: Prepare Let´s Encrypt for Gitlab - externally accessable server
-    include_tasks: letsencrypt-internal-server.yml
+  - name: Prepare Let´s Encrypt certificates for Gitlab
+    include_tasks: letsencrypt.yml
     vars:
       gitlab_domain: "gitlab.pipeline.jonashackt.io"
-    when: internal_server
+    when: https_internal_server
     tags: letsencrypt
 
   - name: Install & Configure Gitlab Runner for Docker

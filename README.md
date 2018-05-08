@@ -162,11 +162,16 @@ After we configured that, we can do our well-known `vagrant up`.
 Now just open up your Browser and go to `docker.gitlab.ci`
 
 
-## Enable https for Gitlab
+## Enable https for Gitlab on public accessable server
 
 https://docs.gitlab.com/omnibus/settings/nginx.html#enable-https
 
 > From 10.7 we will automatically use [Let's Encrypt certificates if the external_url specifies https](https://docs.gitlab.com/omnibus/settings/ssl.html#let-39-s-encrypt-integration)), the certificate files are absent, and the embedded nginx will be used to terminate ssl connections.
+
+If you have an externally accessable server and provision it with these Ansible scripts, you don´t have to worry about the process of obtaining Let´s Encrypt certificates and configuring them for Gitlab. Everything is just done for you by the Gitlab Installation process.
+
+
+## Let´s Encrypt for our Gitlab on VirtualBox/Vagrant
 
 __BUT__: The problem is our local setup here: Let´s Encrypt wont be able to validate the certificate for our domain, since it´s just a local DNS installation.
 
@@ -187,14 +192,129 @@ If you don´t mind about the tld, choose something like `yourDomainName.yxz` or 
 
 > There has been done some great work in the field of generating Let´s Encrypt certificates for private servers (see https://blog.thesparktree.com/generating-intranet-and-private-network-ssl)
 
+The playbook [letsencrypt.yml](letsencrypt.yml) (which is choosen if `https_internal_server` is set to `true`) just automates all the steps described in the mentioned post. It uses [dehydrated](https://github.com/lukas2511/dehydrated) as an alternative Let´s Encrypt client togehter with [lexicon](https://github.com/AnalogJ/lexicon), which is standardises the way how to manipulate DNS records via their API [on multiple DNS providers](https://github.com/AnalogJ/lexicon#providers). We install both tools with Ansible:
+
+```
+  - name: Update apt
+    apt:
+      update_cache: yes
+
+  - name: Install openssl
+    apt:
+      name: openssl
+      state: latest
+
+  - name: Install curl
+    apt:
+      name: curl
+      state: latest
+
+  - name: Install sed
+    apt:
+      name: sed
+      state: latest
+
+  - name: Install grep
+    apt:
+      name: grep
+      state: latest
+
+  - name: Install mktemp
+    apt:
+      name: mktemp
+      state: latest
+
+  - name: Install git
+    apt:
+      name: git
+      state: latest
+
+  - name: Install dehydrated
+    git:
+      repo: 'https://github.com/lukas2511/dehydrated.git'
+      dest: /srv/dehydrated
+
+  - name: Make dehydrated executable
+    file:
+      path: /srv/dehydrated/dehydrated
+      mode: "+x"
+
+  - name: Specify our internal domain
+    shell: "echo '{{ gitlab_domain }}' > /srv/dehydrated/domains.txt"
+
+  - name: Install build-essential
+    apt:
+      name: build-essential
+      state: latest
+
+  - name: Install python-dev
+    apt:
+      name: python-dev
+      state: latest
+
+  - name: Install libffi-dev
+    apt:
+      name: libffi-dev
+      state: latest
+
+  - name: Install libssl-dev
+    apt:
+      name: libssl-dev
+      state: latest
+
+  - name: Install pip
+    apt:
+      name: python-pip
+      state: latest
+
+  - name: Install requests[security]
+    pip:
+      name: "requests[security]"
+
+  - name: Install dns-lexicon
+    pip:
+      name: dns-lexicon
+```
+
+As we don´t have a publicly accessable server, we need to use `dns-01` challenges instead of the Let´s Encrypt standard `http-01`. Therefor dehydrated needs a hook file to work with `dns-01`. [lexicon](https://github.com/AnalogJ/lexicon) has such a file for us [/examples/dehydrated.default.sh](https://github.com/AnalogJ/lexicon/blob/master/examples/dehydrated.default.sh) and we copy it simply inside our playbook:
+
+```
+  - name: Configure lexicon with Dehydrated hook for dns-01 challenge
+    get_url:
+      url: https://raw.githubusercontent.com/AnalogJ/lexicon/master/examples/dehydrated.default.sh
+      dest: /srv/dehydrated/dehydrated.default.sh
+      mode: "+x"
+```
+
+At that point we need to use some private information about your DNS provider - because remember, the whole process could __only be done, if you have access to a real domain__. In order to grant lexicon access to your DNS provider´s API, we set some environment variables and then execute dehydrated:
+
+```
+  # since, the dynamic with LEXICON_{DNS Provider Name}_{Auth Type}, we need to use shell module with export instead of
+  # http://docs.ansible.com/ansible/latest/user_guide/playbooks_environment.html
+  - name: Set dehydrated LEXICON_providername_USERNAME
+    shell: "export LEXICON_{{providername}}_USERNAME={{providerusername}}"
+
+  - name: Set dehydrated LEXICON_providername_USERNAME
+    shell: "export LEXICON_{{providername}}_TOKEN={{providertoken}}"
+
+  # be sure to check https://github.com/AnalogJ/lexicon#providers
+  # the env variables are constructed with LEXICON_{DNS Provider Name}_{Auth Type}
+  - name: Generate Certificates
+    shell: "/srv/dehydrated/dehydrated --cron --hook /srv/dehydrated/dehydrated.default.sh --challenge dns-01"
+    environment:
+      PROVIDER: providername
+```
+
+As you can see, all environment variables are set with the help of Ansible´s `--extra-vars` CLI like this:
+
+```
+ansible-playbook -i hostsfile prepare-gitlab.yml --skip-tags "install_docker,install_gitlab,gitlab_runner" --extra-vars "providername=yourProviderNameHere providerusername=yourUserNameHere providertoken=yourProviderTokenHere"
+```
 
 
+TODO: 
 
-
-
-
-
-So let´s try to create the certificates ourselfes and [configure HTTPS in Gitlab manually](https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/nginx.md#manually-configuring-https).
+[configure HTTPS in Gitlab manually](https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/nginx.md#manually-configuring-https).
 
 
 

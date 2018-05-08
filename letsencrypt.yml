@@ -89,13 +89,20 @@
       dest: /srv/dehydrated/dehydrated.default.sh
       mode: "+x"
 
+  # since, the dynamic with LEXICON_{DNS Provider Name}_{Auth Type}, we need to use shell module with export instead of
+  # http://docs.ansible.com/ansible/latest/user_guide/playbooks_environment.html
+  - name: Set dehydrated LEXICON_providername_USERNAME
+    shell: "export LEXICON_{{providername}}_USERNAME={{providerusername}}"
+
+  - name: Set dehydrated LEXICON_providername_USERNAME
+    shell: "export LEXICON_{{providername}}_TOKEN={{providertoken}}"
+
   # be sure to check https://github.com/AnalogJ/lexicon#providers
   # the env variables are constructed with LEXICON_{DNS Provider Name}_{Auth Type}
-#  - name: Generate Certificates
-#    shell: "/srv/dehydrated/dehydrated --cron --hook /srv/dehydrated/dehydrated.default.sh --challenge dns-01"
-#    environment:
-#      PROVIDER: "namecheap"
-#      LEXICON_NAMECHEAP_USERNAME: "jonashackt"
-#      LEXICON_NAMECHEAP_TOKEN: "token"
+  - name: Generate Certificates
+    shell: "/srv/dehydrated/dehydrated --cron --hook /srv/dehydrated/dehydrated.default.sh --challenge dns-01"
+    environment:
+      PROVIDER: providername
 
 
+  # cron config, see https://github.com/AnalogJ/lexicon/blob/master/Dockerfile
