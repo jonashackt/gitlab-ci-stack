@@ -190,6 +190,9 @@ Although Let´s Encrypt was designed to be used with public accessable websites,
 
 If you don´t mind about the tld, choose something like `yourDomainName.yxz` or `yourDomainName.online`, which are available from 1$/year. Just be sure to pick [one from this provider list](https://github.com/AnalogJ/lexicon#providers). 
 
+__YOU NEED API ACCESS TO PROCEED!__: What all the blog posts only tell you at the end: Besides your regularly registered/purchased domain you´ll need API-access to your provider, which often isn´t included in the standard price of your domain! I choose https://www.namecheap.com/ and to use the [namecheap api](https://www.namecheap.com/support/api), you´ll need to [upgrade your balance to 50$](https://www.namecheap.com/support/knowledgebase/article.aspx/9739/63/api--faq#c).
+
+
 > There has been done some great work in the field of generating Let´s Encrypt certificates for private servers (see https://blog.thesparktree.com/generating-intranet-and-private-network-ssl)
 
 The playbook [letsencrypt.yml](letsencrypt.yml) (which is choosen if `https_internal_server` is set to `true`) just automates all the steps described in the mentioned post. It uses [dehydrated](https://github.com/lukas2511/dehydrated) as an alternative Let´s Encrypt client togehter with [lexicon](https://github.com/AnalogJ/lexicon), which is standardises the way how to manipulate DNS records via their API [on multiple DNS providers](https://github.com/AnalogJ/lexicon#providers). We install both tools with Ansible:
@@ -310,6 +313,8 @@ As you can see, all environment variables are set with the help of Ansible´s `-
 ```
 ansible-playbook -i hostsfile prepare-gitlab.yml --skip-tags "install_docker,install_gitlab,gitlab_runner" --extra-vars "providername=yourProviderNameHere providerusername=yourUserNameHere providertoken=yourProviderTokenHere"
 ```
+
+Just change `yourProviderNameHere`, `yourUserNameHere` and `yourProviderTokenHere` accordingly!
 
 
 TODO: 
