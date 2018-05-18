@@ -1,6 +1,6 @@
 Vagrant.configure("2") do |config|
 
-    config.vm.box = "ubuntu/trusty64"
+    config.vm.box = "ubuntu/xenial64"
     config.vm.hostname = "pipeline"
     # Register domain ci for later access prettiness
     config.dns.tld = "ci"
@@ -27,6 +27,5 @@ Vagrant.configure("2") do |config|
     # Forwarding the Guest to Host ports, so that we can access it easily from outside the VM
     config.vm.network "forwarded_port", guest: 80, host: 30080, host_ip: "127.0.0.1", id: "gitlab"
     config.vm.network "forwarded_port", guest: 443, host: 30443, host_ip: "127.0.0.1", id: "gitlab_https"
-    config.vm.network "forwarded_port", guest: 22, host: 30022, host_ip: "127.0.0.1", id: "gitlab_ssh"
 
 end
