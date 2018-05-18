@@ -191,6 +191,7 @@ Although Let´s Encrypt was designed to be used with public accessable websites,
 If you don´t mind about the tld, choose something like `yourDomainName.yxz` or `yourDomainName.online`, which are available from 1$/year. Just be sure to pick [one from this provider list](https://github.com/AnalogJ/lexicon#providers). 
 
 __YOU NEED API ACCESS TO PROCEED!__: What all the blog posts only tell you at the end: Besides your regularly registered/purchased domain you´ll need API-access to your provider, which often isn´t included in the standard price of your domain! I choose https://www.namecheap.com/ and to use the [namecheap api](https://www.namecheap.com/support/api), you´ll need to [upgrade your balance to 50$](https://www.namecheap.com/support/knowledgebase/article.aspx/9739/63/api--faq#c).
+And you often also need to whitelist the IP your approaching the DNS provider API from - in our case, use a tool like http://www.whatsmyip.org/ to get the IP and add it to your DNS providers API access IP whitelist (just be sure to double check this IP before you call the playbook!)
 
 
 > There has been done some great work in the field of generating Let´s Encrypt certificates for private servers (see https://blog.thesparktree.com/generating-intranet-and-private-network-ssl)

@@ -3,12 +3,19 @@
   become: true
 
   vars:
-    gitlab_url: "http://gitlab.pipeline.ci"
-    https_internal_server: false
+    gitlab_url: "https://gitlab.jonashackt.io"
+    https_internal_server: true
 
   tasks:
   - name: Checking Ansible connectivity to Linux nodes
     ping:
+
+  - name: Prepare Let´s Encrypt certificates for Gitlab
+    include_tasks: letsencrypt.yml
+    vars:
+      gitlab_domain: "gitlab.jonashackt.io"
+    when: https_internal_server
+    tags: letsencrypt
 
   - name: Prepare Docker on Linux node
     include_tasks: prepare-docker-linux.yml
@@ -17,13 +24,6 @@
   - name: Install Gitlab on Linux node
     include_tasks: install-gitlab.yml
     tags: install_gitlab
-
-  - name: Prepare Let´s Encrypt certificates for Gitlab
-    include_tasks: letsencrypt.yml
-    vars:
-      gitlab_domain: "gitlab.pipeline.jonashackt.io"
-    when: https_internal_server
-    tags: letsencrypt
 
   - name: Install & Configure Gitlab Runner for Docker
     include_tasks: gitlab-runner.yml

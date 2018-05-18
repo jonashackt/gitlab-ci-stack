@@ -42,6 +42,7 @@
       state: latest
     environment:
       EXTERNAL_URL: "{{gitlab_url}}"
+    ignore_errors: true
 
   - name: Wait for Gitlab to start up
     wait_for:

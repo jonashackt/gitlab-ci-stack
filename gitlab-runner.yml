@@ -46,6 +46,6 @@
     shell: "sudo usermod -aG docker gitlab-runner"
 
   - name: Register Gitlab Docker Runner
-    shell: "sudo gitlab-runner register --non-interactive --url \"{{gitlab_url}}\" --registration-token \"{{gitlab_runner_registration_token}}\" --description \"docker-native\" --executor shell"
+    shell: "gitlab-runner register --non-interactive --url '{{gitlab_url}}' --registration-token '{{gitlab_runner_registration_token}}' --description 'docker-native' --executor shell"
 
 

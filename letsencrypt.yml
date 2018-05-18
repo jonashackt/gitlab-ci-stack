@@ -2,107 +2,32 @@
   # This playbook should work for servers, that aren´t accessable from the internet (like our local Vagrant setup here)
   # Be sure to use a real/purchased domain!
 
-  # The playbook automates all the steps mentioned here https://blog.thesparktree.com/generating-intranet-and-private-network-ssl
-  - name: Update apt
-    apt:
-      update_cache: yes
+  - name: Firstofall we´ll check, if we already generated some certificates
+    find:
+      paths: "/srv/dehydrated/certs/{{ gitlab_domain }}"
+    register: files_in_dehydrated_cert_folder
 
-  - name: Install openssl
-    apt:
-      name: openssl
-      state: latest
+  - set_fact:
+      certs_folder_empty: files_in_dehydrated_cert_folder.matched == "0"
 
-  - name: Install curl
-    apt:
-      name: curl
-      state: latest
+  - name: No certs present in /srv/dehydrated/certs/
+    debug:
+      msg: "There are no certs present in /srv/dehydrated/certs/ (files in this dir: {{ files_in_dehydrated_cert_folder.files }}), we need to obtain new ones"
+    when: certs_folder_empty
 
-  - name: Install sed
-    apt:
-      name: sed
-      state: latest
+  - name: Obtain new Let´s Encrypt certificates for our internally-only accessable VagrantBox
+    include_tasks: obtain-letsencrypt-certs-dehydrated-lexicon.yml
+#    when: certs_folder_empty
 
-  - name: Install grep
-    apt:
-      name: grep
-      state: latest
-
-  - name: Install mktemp
-    apt:
-      name: mktemp
-      state: latest
-
-  - name: Install git
-    apt:
-      name: git
-      state: latest
-
-  - name: Install dehydrated
-    git:
-      repo: 'https://github.com/lukas2511/dehydrated.git'
-      dest: /srv/dehydrated
-
-  - name: Make dehydrated executable
+  - name: Create Gitlab cert import folder /etc/gitlab/trusted-certs for later Gitlab Installation usage
     file:
-      path: /srv/dehydrated/dehydrated
-      mode: "+x"
+      path: /etc/gitlab/trusted-certs
+      state: directory
 
-  - name: Specify our internal domain
-    shell: "echo '{{ gitlab_domain }}' > /srv/dehydrated/domains.txt"
-
-  - name: Install build-essential
-    apt:
-      name: build-essential
-      state: latest
-
-  - name: Install python-dev
-    apt:
-      name: python-dev
-      state: latest
-
-  - name: Install libffi-dev
-    apt:
-      name: libffi-dev
-      state: latest
-
-  - name: Install libssl-dev
-    apt:
-      name: libssl-dev
-      state: latest
-
-  - name: Install pip
-    apt:
-      name: python-pip
-      state: latest
-
-  - name: Install requests[security]
-    pip:
-      name: "requests[security]"
-
-  - name: Install dns-lexicon
-    pip:
-      name: dns-lexicon
-
-  - name: Configure lexicon with Dehydrated hook for dns-01 challenge
-    get_url:
-      url: https://raw.githubusercontent.com/AnalogJ/lexicon/master/examples/dehydrated.default.sh
-      dest: /srv/dehydrated/dehydrated.default.sh
-      mode: "+x"
-
-  # since, the dynamic with LEXICON_{DNS Provider Name}_{Auth Type}, we need to use shell module with export instead of
-  # http://docs.ansible.com/ansible/latest/user_guide/playbooks_environment.html
-  - name: Set dehydrated LEXICON_providername_USERNAME
-    shell: "export LEXICON_{{providername}}_USERNAME={{providerusername}}"
-
-  - name: Set dehydrated LEXICON_providername_USERNAME
-    shell: "export LEXICON_{{providername}}_TOKEN={{providertoken}}"
-
-  # be sure to check https://github.com/AnalogJ/lexicon#providers
-  # the env variables are constructed with LEXICON_{DNS Provider Name}_{Auth Type}
-  - name: Generate Certificates
-    shell: "/srv/dehydrated/dehydrated --cron --hook /srv/dehydrated/dehydrated.default.sh --challenge dns-01"
-    environment:
-      PROVIDER: providername
-
-
-  # cron config, see https://github.com/AnalogJ/lexicon/blob/master/Dockerfile
+  - name: Copy certificate files to Gitlab cert import folder /etc/gitlab/trusted-certs (see https://docs.gitlab.com/omnibus/settings/ssl.html#details-on-how-gitlab-and-ssl-work)
+    copy:
+      src: "{{ item.path }}"
+      dest: "{{ item.path | regex_replace('(/srv/dehydrated/certs/)+[._a-zA-Z0-9-]+','/etc/gitlab/trusted-certs') }}"
+      remote_src: yes
+    with_items:
+      - "{{ files_in_dehydrated_cert_folder.files }}"
