@@ -2,13 +2,13 @@
   # This playbook should work for servers, that aren´t accessable from the internet (like our local Vagrant setup here)
   # Be sure to use a real/purchased domain!
 
-  - name: Firstofall we´ll check, if we already generated some certificates
+  - name: Check, if there are any directory in dehydrated certs folder
     find:
-      paths: "/srv/dehydrated/certs/{{ gitlab_domain }}"
+      paths: "/srv/dehydrated/certs/"
     register: files_in_dehydrated_cert_folder
 
   - set_fact:
-      certs_folder_empty: files_in_dehydrated_cert_folder.matched == "0"
+      certs_folder_empty: files_in_dehydrated_cert_folder.matched == 0
 
   - name: No certs present in /srv/dehydrated/certs/
     debug:
@@ -19,10 +19,19 @@
     include_tasks: obtain-letsencrypt-certs-dehydrated-lexicon.yml
     when: certs_folder_empty
 
+  - name: Check, if generation of new certificates was successful
+    find:
+      paths: "/srv/dehydrated/certs/{{ gitlab_domain }}/cert.pem"
+    register: cert_pem_in_dehydrated_cert_folder
+
+  - set_fact:
+      success: cert_pem_in_dehydrated_cert_folder.matched != "0"
+
   - name: Create Gitlab cert import folder /etc/gitlab/trusted-certs for later Gitlab Installation usage
     file:
       path: /etc/gitlab/trusted-certs
       state: directory
+    when: success
 
   - name: Copy certificate files to Gitlab cert import folder /etc/gitlab/trusted-certs (see https://docs.gitlab.com/omnibus/settings/ssl.html#details-on-how-gitlab-and-ssl-work)
     copy:
@@ -41,3 +50,5 @@
 
       - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/privkey.pem"
         dest: "/etc/gitlab/trusted-certs/privkey.pem"
+
+    when: success

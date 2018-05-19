@@ -70,9 +70,7 @@ If the server is up and running (this may take a while when doing it for the fir
 Let´s do a connection check first. Only at the first run, we also need to surround the `ping` with those environment variables:
 
 ```
-export ANSIBLE_HOST_KEY_CHECKING=False
 ansible docker-ci-stack -i hostsfile -m ping
-unset ANSIBLE_HOST_KEY_CHECKING
 ```
 
 If this gave a `SUCCESS`, we can move on to really execute our ansible script (from the second run on you can start here!).

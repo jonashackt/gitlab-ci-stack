@@ -57,26 +57,18 @@
       dest: /srv/dehydrated/dehydrated.default.sh
       mode: "+x"
 
-  # since, the dynamic key name like LEXICON_{DNS Provider Name}_{Auth Type}, we need to use shell module with export instead of
-  # http://docs.ansible.com/ansible/latest/user_guide/playbooks_environment.html
-  - name: Set dehydrated LEXICON_providername_USERNAME
-    shell: "export LEXICON_{{providername|upper}}_USERNAME={{providerusername}}"
-
-  - name: Set dehydrated LEXICON_providername_USERNAME
-    shell: "export LEXICON_{{providername|upper}}_TOKEN={{providertoken}}"
-
-  - name: Show environment variables
-    shell: "printenv"
-
   # be sure to check https://github.com/AnalogJ/lexicon#providers
   # the env variables are constructed with LEXICON_{DNS Provider Name}_{Auth Type}
-  # if everything went fine, this should place the new Let´s Encrypt Certificates into /srv/dehydrated/certs/
+  # since, the dynamic key name like LEXICON_{DNS Provider Name}_{Auth Type}, we can´t use the standard approach (http://docs.ansible.com/ansible/latest/user_guide/playbooks_environment.html)
+  # because our Environment variable key names are dynamic based on the Provider name. Therefor we use the hint in https://stackoverflow.com/a/44570290/4964553
+  # and construct the variables with "{'dynamic environment variable key name inkl. {{ vars }}':'{{ dynamic environment variable value}}'}"
+  # If everything went fine, this should place the new Let´s Encrypt Certificates into /srv/dehydrated/certs/{{ gitlab_domain }}
   - name: Generate Certificates
     shell: "/srv/dehydrated/dehydrated --cron --hook /srv/dehydrated/dehydrated.default.sh --challenge dns-01 --accept-terms"
     environment:
-      PROVIDER: "{{providername|lower}}"
-      LEXICON_NAMECHEAP_USERNAME: "{{providerusername}}"
-      LEXICON_NAMECHEAP_TOKEN: "{{providertoken}}"
+      - PROVIDER: "{{providername|lower}}"
+      - "{'LEXICON_{{providername|upper}}_USERNAME':'{{providerusername}}'}"
+      - "{'LEXICON_{{providername|upper}}_TOKEN':'{{providertoken}}'}"
     ignore_errors: true
 
   # cron config, see https://github.com/AnalogJ/lexicon/blob/master/Dockerfile
