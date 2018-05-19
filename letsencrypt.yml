@@ -17,7 +17,7 @@
 
   - name: Obtain new Let´s Encrypt certificates for our internally-only accessable VagrantBox
     include_tasks: obtain-letsencrypt-certs-dehydrated-lexicon.yml
-#    when: certs_folder_empty
+    when: certs_folder_empty
 
   - name: Create Gitlab cert import folder /etc/gitlab/trusted-certs for later Gitlab Installation usage
     file:
@@ -26,8 +26,18 @@
 
   - name: Copy certificate files to Gitlab cert import folder /etc/gitlab/trusted-certs (see https://docs.gitlab.com/omnibus/settings/ssl.html#details-on-how-gitlab-and-ssl-work)
     copy:
-      src: "{{ item.path }}"
-      dest: "{{ item.path | regex_replace('(/srv/dehydrated/certs/)+[._a-zA-Z0-9-]+','/etc/gitlab/trusted-certs') }}"
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
       remote_src: yes
     with_items:
-      - "{{ files_in_dehydrated_cert_folder.files }}"
+      - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/cert.pem"
+        dest: "/etc/gitlab/trusted-certs/cert.pem"
+
+      - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/chain.pem"
+        dest: "/etc/gitlab/trusted-certs/chain.pem"
+
+      - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/fullchain.pem"
+        dest: "/etc/gitlab/trusted-certs/fullchain.pem"
+
+      - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/privkey.pem"
+        dest: "/etc/gitlab/trusted-certs/privkey.pem"
