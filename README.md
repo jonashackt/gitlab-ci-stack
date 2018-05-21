@@ -197,40 +197,26 @@ And you often also need to whitelist the IP your approaching the DNS provider AP
 The playbook [letsencrypt.yml](letsencrypt.yml) (which is choosen if `https_internal_server` is set to `true`) just automates all the steps described in the mentioned post. It uses [dehydrated](https://github.com/lukas2511/dehydrated) as an alternative Let´s Encrypt client togehter with [lexicon](https://github.com/AnalogJ/lexicon), which is standardises the way how to manipulate DNS records via their API [on multiple DNS providers](https://github.com/AnalogJ/lexicon#providers). We install both tools with Ansible:
 
 ```
+  # This playbook should work for servers, that aren´t accessable from the internet (like our local Vagrant setup here)
+  # Be sure to use a real/purchased domain!
+
+  # The playbook automates all the steps mentioned here https://blog.thesparktree.com/generating-intranet-and-private-network-ssl
   - name: Update apt
     apt:
       update_cache: yes
 
-  - name: Install openssl
+  - name: Install openssl, curl, sed, grep, mktemp, git
     apt:
-      name: openssl
+      name:
+        - openssl
+        - curl
+        - sed
+        - grep
+        - mktemp
+        - git
       state: latest
 
-  - name: Install curl
-    apt:
-      name: curl
-      state: latest
-
-  - name: Install sed
-    apt:
-      name: sed
-      state: latest
-
-  - name: Install grep
-    apt:
-      name: grep
-      state: latest
-
-  - name: Install mktemp
-    apt:
-      name: mktemp
-      state: latest
-
-  - name: Install git
-    apt:
-      name: git
-      state: latest
-
+  # install this neat tool https://github.com/lukas2511/dehydrated
   - name: Install dehydrated
     git:
       repo: 'https://github.com/lukas2511/dehydrated.git'
@@ -244,38 +230,24 @@ The playbook [letsencrypt.yml](letsencrypt.yml) (which is choosen if `https_inte
   - name: Specify our internal domain
     shell: "echo '{{ gitlab_domain }}' > /srv/dehydrated/domains.txt"
 
-  - name: Install build-essential
+  - name: Install build-essential, python-dev, libffi-dev, python3-pip
     apt:
-      name: build-essential
-      state: latest
-
-  - name: Install python-dev
-    apt:
-      name: python-dev
-      state: latest
-
-  - name: Install libffi-dev
-    apt:
-      name: libffi-dev
-      state: latest
-
-  - name: Install libssl-dev
-    apt:
-      name: libssl-dev
-      state: latest
-
-  - name: Install pip
-    apt:
-      name: python-pip
+      name:
+        - build-essential
+        - python-dev
+        - libffi-dev
+        - libssl-dev
+        - python3-pip
       state: latest
 
   - name: Install requests[security]
     pip:
       name: "requests[security]"
 
-  - name: Install dns-lexicon
+  # install this neat tool https://github.com/AnalogJ/lexicon
+  - name: Install dns-lexicon with correct provider (dns-lexicon[providernamehere])
     pip:
-      name: dns-lexicon
+      name: "dns-lexicon[{{providername|lower}}]"
 ```
 
 As we don´t have a publicly accessable server, we need to use `dns-01` challenges instead of the Let´s Encrypt standard `http-01`. Therefor dehydrated needs a hook file to work with `dns-01`. [lexicon](https://github.com/AnalogJ/lexicon) has such a file for us [/examples/dehydrated.default.sh](https://github.com/AnalogJ/lexicon/blob/master/examples/dehydrated.default.sh) and we copy it simply inside our playbook:
@@ -291,20 +263,19 @@ As we don´t have a publicly accessable server, we need to use `dns-01` challeng
 At that point we need to use some private information about your DNS provider - because remember, the whole process could __only be done, if you have access to a real domain__. In order to grant lexicon access to your DNS provider´s API, we set some environment variables and then execute dehydrated:
 
 ```
-  # since, the dynamic with LEXICON_{DNS Provider Name}_{Auth Type}, we need to use shell module with export instead of
-  # http://docs.ansible.com/ansible/latest/user_guide/playbooks_environment.html
-  - name: Set dehydrated LEXICON_providername_USERNAME
-    shell: "export LEXICON_{{providername}}_USERNAME={{providerusername}}"
-
-  - name: Set dehydrated LEXICON_providername_USERNAME
-    shell: "export LEXICON_{{providername}}_TOKEN={{providertoken}}"
-
   # be sure to check https://github.com/AnalogJ/lexicon#providers
   # the env variables are constructed with LEXICON_{DNS Provider Name}_{Auth Type}
+  # since, the dynamic key name like LEXICON_{DNS Provider Name}_{Auth Type}, we can´t use the standard approach (http://docs.ansible.com/ansible/latest/user_guide/playbooks_environment.html)
+  # because our Environment variable key names are dynamic based on the Provider name. Therefor we use the hint in https://stackoverflow.com/a/44570290/4964553
+  # and construct the variables with "{'dynamic environment variable key name inkl. {{ vars }}':'{{ dynamic environment variable value}}'}"
+  # If everything went fine, this should place the new Let´s Encrypt Certificates into /srv/dehydrated/certs/{{ gitlab_domain }}
   - name: Generate Certificates
-    shell: "/srv/dehydrated/dehydrated --cron --hook /srv/dehydrated/dehydrated.default.sh --challenge dns-01"
+    shell: "/srv/dehydrated/dehydrated --cron --hook /srv/dehydrated/dehydrated.default.sh --challenge dns-01 --accept-terms"
     environment:
-      PROVIDER: providername
+      - PROVIDER: "{{providername|lower}}"
+      - "{'LEXICON_{{providername|upper}}_USERNAME':'{{providerusername}}'}"
+      - "{'LEXICON_{{providername|upper}}_TOKEN':'{{providertoken}}'}"
+    ignore_errors: true
 ```
 
 As you can see, all environment variables are set with the help of Ansible´s `--extra-vars` CLI like this:
@@ -316,9 +287,44 @@ ansible-playbook -i hostsfile prepare-gitlab.yml --skip-tags "install_docker,ins
 Just change `yourProviderNameHere`, `yourUserNameHere` and `yourProviderTokenHere` accordingly!
 
 
-TODO: 
+### Configure the "self-created" Let´s Encrypt certificates in Gitlab (it´s the same process for other certificates then Let´s Encrypt)
 
-[configure HTTPS in Gitlab manually](https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/nginx.md#manually-configuring-https).
+> Please don´t get confused with this part of the docs: https://docs.gitlab.com/omnibus/settings/ssl.html#install-custom-certificate-authorities, since that´s only needed, if you want to install a custom certificate authority and not necessary for correctly created Let´s Encrypt certificates (since the Let´s Encrypt authority is already trusted!)
+
+[According to the docs there are 2 ways to configure HTTPS in Gitlab](https://docs.gitlab.com/omnibus/settings/nginx.html): The [automatic Let´s Encrypt way](https://docs.gitlab.com/omnibus/settings/ssl.html#let-39-s-encrypt-integration), which we sadly can´t use in our scenario here, where our Vagrant Box isn´t publically accessible - and [the way to manually configure HTTPS](https://docs.gitlab.com/omnibus/settings/nginx.html#manually-configuring-https), the one we need to choose here.
+
+Therefore we set the `external_url` via the Environment variable `EXTERNAL_URL: "{{gitlab_url}}"` at the Gitlab Omnibus installation process to contain an `https`, in our example here: `https://gitlab.jonashackt.io` (remember you need to own the domain or at least need access to the DNS provider for the [Let´s Encrypt process for internal servers](https://github.com/jonashackt/docker-ci-stack#lets-encrypt-for-our-gitlab-on-virtualboxvagrant)).
+
+After that, Gitlab Omnibus installation will look for certificates named `/etc/gitlab/ssl/gitlab.jonashackt.io.key` & `/etc/gitlab/ssl/gitlab.jonashackt.io.crt` - note that both file names are derived from the domain name `gitlab.jonashackt.io`.
+
+Everything needed is done by the [letsencrypt.yml](letsencrypt.yml), it will just copy the generated certificates with the correct name to the correct location:
+
+```
+  - name: Create Gitlab cert import folder /etc/gitlab/trusted-certs for later Gitlab Installation usage
+    file:
+      path: /etc/gitlab/trusted-certs
+      state: directory
+    when: success
+
+  - name: Copy certificate files to Gitlab cert import folder /etc/gitlab/trusted-certs (see https://docs.gitlab.com/omnibus/settings/ssl.html#details-on-how-gitlab-and-ssl-work)
+    copy:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      remote_src: yes
+    with_items:
+      - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/cert.pem"
+        dest: "/etc/gitlab/ssl/{{ gitlab_domain }}.crt"
+
+      - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/privkey.pem"
+        dest: "/etc/gitlab/ssl/{{ gitlab_domain }}.key"
+
+    when: success
+```
+
+Now you can use your Gitlab without cryptic error messages because of self-signed certificates:
+
+![complete_https_letsencrypt_gitlab](complete_https_letsencrypt_gitlab.png) 
+
 
 
 

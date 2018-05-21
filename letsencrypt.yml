@@ -40,15 +40,9 @@
       remote_src: yes
     with_items:
       - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/cert.pem"
-        dest: "/etc/gitlab/trusted-certs/cert.pem"
-
-      - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/chain.pem"
-        dest: "/etc/gitlab/trusted-certs/chain.pem"
-
-      - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/fullchain.pem"
-        dest: "/etc/gitlab/trusted-certs/fullchain.pem"
+        dest: "/etc/gitlab/ssl/{{ gitlab_domain }}.crt"
 
       - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/privkey.pem"
-        dest: "/etc/gitlab/trusted-certs/privkey.pem"
+        dest: "/etc/gitlab/ssl/{{ gitlab_domain }}.key"
 
     when: success

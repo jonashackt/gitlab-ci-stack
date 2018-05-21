@@ -3,7 +3,8 @@
   become: true
 
   vars:
-    gitlab_url: "https://gitlab.jonashackt.io"
+    gitlab_domain: "gitlab.jonashackt.io"
+    gitlab_url: "https://{{ gitlab_domain }}"
     https_internal_server: true
 
   tasks:
@@ -12,8 +13,6 @@
 
   - name: Prepare Let´s Encrypt certificates for Gitlab
     include_tasks: letsencrypt.yml
-    vars:
-      gitlab_domain: "gitlab.jonashackt.io"
     when: https_internal_server
     tags: letsencrypt
 

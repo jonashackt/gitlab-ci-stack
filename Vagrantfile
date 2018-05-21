@@ -1,9 +1,9 @@
 Vagrant.configure("2") do |config|
 
     config.vm.box = "ubuntu/xenial64"
-    config.vm.hostname = "pipeline"
+    config.vm.hostname = "jonashackt"
     # Register domain ci for later access prettiness
-    config.dns.tld = "ci"
+    config.dns.tld = "io"
 
     # As to https://www.vagrantup.com/docs/multi-machine/ & https://www.vagrantup.com/docs/networking/private_network.html
     # we need to configure a private network, so that our machines are able to talk to one another
