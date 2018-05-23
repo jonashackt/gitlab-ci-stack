@@ -7,24 +7,13 @@
       cache_valid_time: 3600
       autoremove: yes
 
-  - name: Install curl
+  - name: Install curl, openssh-server, ca-certificates & postfix
     apt:
       name: curl
-      state: latest
-
-  - name: Install openssh-server
-    apt:
-      name: openssh-server
-      state: latest
-
-  - name: Install ca-certificates
-    apt:
-      name: ca-certificates
-      state: latest
-
-  - name: Install Postfix to send notification emails
-    apt:
-      name: postfix
+        - curl
+        - openssh-server
+        - ca-certificates
+        - postfix
       state: latest
 
   - name: Add the GitLab package repository
@@ -62,7 +51,7 @@
       url: "{{gitlab_url}}"
 
   - debug:
-      msg: "Your Gitlab instance is ready at your Vagrant host machine http://localhost:30080"
+      msg: "Your Gitlab instance is ready at your Vagrant host machine https://{{gitlab_url}}"
 
 
 
