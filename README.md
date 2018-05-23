@@ -35,7 +35,7 @@ Therefore I wanted to have a deeper look into Gitlab.
 
 Today Gitlab not only offers a alternative to Bitbucket Server or GitHub Enterprise, they also offer an [alternate CI-Implementation](https://docs.gitlab.com/ce/ci/README.html):
 
-![cicd_pipeline_infograph](cicd_pipeline_infograph.png)
+![cicd_pipeline_infograph](screenshots/cicd_pipeline_infograph.png)
 
 Source: https://docs.gitlab.com/ce/ci/README.html
 
@@ -83,7 +83,7 @@ ansible-playbook -i hostsfile prepare-gitlab.yml
 
 Now just grab a coffee. If you return to your machine, enter the http://localhost:30080 and your Gitlab should be running fine:
 
-![running-gitlab](running-gitlab.png)
+![running-gitlab](screenshots/running-gitlab.png)
 
 
 ## Install & configure Gitlab Docker Runner
@@ -175,7 +175,7 @@ __BUT__: The problem is our local setup here: Let´s Encrypt wont be able to val
 
 That sounds like we´re in need of a different way. Because if we just use our domain with https like https://gitlab.pipeline.ci/, our Browser will complain:
 
-![insecure-https](insecure-https.png)
+![insecure-https](screenshots/insecure-https.png)
 
 and a `git push` will result into the following problem:
 
@@ -312,7 +312,7 @@ Everything needed is done by the [letsencrypt.yml](letsencrypt.yml), it will jus
       dest: "{{ item.dest }}"
       remote_src: yes
     with_items:
-      - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/cert.pem"
+      - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/fullchain.pem"
         dest: "/etc/gitlab/ssl/{{ gitlab_domain }}.crt"
 
       - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/privkey.pem"
@@ -323,7 +323,7 @@ Everything needed is done by the [letsencrypt.yml](letsencrypt.yml), it will jus
 
 Now you can use your Gitlab without cryptic error messages because of self-signed certificates:
 
-![complete_https_letsencrypt_gitlab](complete_https_letsencrypt_gitlab.png) 
+![complete_https_letsencrypt_gitlab](screenshots/complete_https_letsencrypt_gitlab.png) 
 
 
 
@@ -356,7 +356,7 @@ If we just use our configured domain, we can follow the docs here: https://docs.
 
 The playbook [configure-gitlab-registry.yml](configure-gitlab-registry.yml) inserts the following needed config into the gitlab.rb: `registry_external_url 'https://gitlab.jonashackt.io:4567'` and this follows after a `sudo gitlab-ctl reconfigure`:
 
-![configuring-gitlab-docker-registry](configuring-gitlab-docker-registry.png)
+![configuring-gitlab-docker-registry](screenshots/configuring-gitlab-docker-registry.png)
 
 
 
@@ -454,13 +454,13 @@ https://docs.gitlab.com/ee/user/group/#namespaces
 
 Now we´re nearly there. Just add a new password for the root user and login with that credentials. Then head over to to `Create a project` and there click on `Import Project` / `Repo by URL`:
 
-![import-project](import-project.png)
+![import-project](screenshots/import-project.png)
 
 Paste the example Projects git URL into __Git repository URL__ field: `https://github.com/jonashackt/restexamples.git`, change Visibility Level to __Internal__ and hit __Create Project__.
 
 Now at __CI / CD__ / __Pipelines__ fire up the Pipeline once (only this time manually since we didn´t push something new) and it should build a simple Spring Boot example project and push the resulting Image into our branch new Gitlab Container Registry:
 
-![successful-first-pipeline-run](successful-first-pipeline-run.png)
+![successful-first-pipeline-run](screenshots/successful-first-pipeline-run.png)
 
 The example project [restexamples](https://github.com/jonashackt/restexamples) has a [prepared .gitlab-ci.yml already](https://github.com/jonashackt/restexamples/blob/master/.gitlab-ci.yml), so it should do everything smoothly:
 
@@ -485,7 +485,7 @@ build-and-push:
 
 And you should be able to see your newly pushed Image in the Gitlab Registry overview:
 
-![gitlab-registry-overview](gitlab-registry-overview.png)
+![gitlab-registry-overview](screenshots/gitlab-registry-overview.png)
 
 
 
