@@ -335,6 +335,102 @@ https://docs.gitlab.com/ee/user/project/container_registry.html
 
 [Gitlab Container Registry domain configuration](https://docs.gitlab.com/ee/administration/container_registry.html#container-registry-domain-configuration)
 
+If we just use our configured domain, we can follow the docs here: https://docs.gitlab.com/ee/administration/container_registry.html#configure-container-registry-under-an-existing-gitlab-domain
+
+The playbook xxx inserts the following needed config into the gitlab.rb: `registry_external_url 'https://gitlab.jonashackt.io:5000'` and this follows after a `sudo gitlab-ctl reconfigure`:
+
+![configuring-gitlab-docker-registry](configuring-gitlab-docker-registry.png)
+
+
+
+
+https://docs.gitlab.com/ee/user/project/container_registry.html#build-and-push-images
+
+
+https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#using-the-gitlab-container-registry
+
+
+### Namespaces (username, group or subgroup)
+
+https://docs.gitlab.com/ee/user/group/#namespaces
+
+
+
+### Ubuntu & Docker don´t know Let´s Encrypt so we need to copy the fullchain.pem instead of just the cert.pem!
+
+The next problem was the following error while registering the gitlab-runners in [letsencrypt.yml](letsencrypt.yml):
+
+```
+ERROR: Registering runner... failed
+runner=gyy8axxP status=couldn't execute POST against https://gitlab.jonashackt.io/api/v4/runners: Post https://gitlab.jonashackt.io/api/v4/runners: x509: certificate signed by unknown authority
+PANIC: Failed to register this runner. Perhaps you are having network problems
+```
+
+To avoid that for now, I added the `--tls-ca-file` option like so: `--tls-ca-file=/etc/gitlab/ssl/gitlab.jonashackt.io.crt` which is described here: https://gitlab.com/gitlab-org/gitlab-runner/issues/230
+      
+But, then the next problem occured inside the Pipeline at the first step, where we want to use the Gitlab Container Registry:
+
+```
+Error response from daemon: Get https://gitlab.jonashackt.io:5000/v2/: x509: certificate signed by unknown authority
+ERROR: Job failed: exit status 1
+```
+ 
+Luckily this problem was already solved by https://github.com/bkcsfi in https://github.com/moby/moby/issues/31602#issuecomment-379955352, where he states that the 
+
+```
+I think you probably want to use fullchain.pem instead of cert.pem because neither docker (go lib) nor (ubuntu in my case) have LE root cert built in at this time
+
+I have gitlab setup with LE certificate. Browser works fine, but docker fails to push to registry.
+```
+
+So all we have to do to tell the Gitlab Container Registry about our Let´s Encrypt certificates is to copy `/srv/dehydrated/certs/{{ gitlab_domain }}/fullchain.pem` instead of `/srv/dehydrated/certs/{{ gitlab_domain }}/cert.pem` to Gitlab certificates. 
+
+This configures also the Gitlab Container Registry, although it seems to be an configuration option for Gitlab itself only - just have a [look into the docs](https://docs.gitlab.com/ee/administration/container_registry.html#configure-container-registry-under-an-existing-gitlab-domain):
+
+> If your TLS certificate is not in /etc/gitlab/ssl/gitlab.example.com.crt and key not in /etc/gitlab/ssl/gitlab.example.com.key uncomment the lines below ...
+
+--> As our certiticates are named accordingly with the correct domain name, the Gitlab Container Registry also uses these certificates (and now our fullchain.pem). You can observe that while running an `sudo gitlab-ctl reconfigure` after you manually activated the `registry_external_url 'https://gitlab.jonashackt.io:4567'` inside the `/etc/gitlab/gitlab.rb`:
+
+```
+    ...
+
+    - create new file /var/opt/gitlab/nginx/conf/gitlab-registry.conf
+    - update content in file /var/opt/gitlab/nginx/conf/gitlab-registry.conf from none to 38ba8d
+    --- /var/opt/gitlab/nginx/conf/gitlab-registry.conf	2018-05-23 07:06:18.857687999 +0000
+    +++ /var/opt/gitlab/nginx/conf/.chef-gitlab-registry20180523-13668-614sno.conf	2018-05-23 07:06:18.857687999 +0000
+    @@ -1 +1,59 @@
+    +# This file is managed by gitlab-ctl. Manual changes will be
+    +# erased! To change the contents below, edit /etc/gitlab/gitlab.rb
+    +# and run `sudo gitlab-ctl reconfigure`.
+    +
+    +## Lines starting with two hashes (##) are comments with information.
+    +## Lines starting with one hash (#) are configuration parameters that can be uncommented.
+    +##
+    +###################################
+    +##         configuration         ##
+    +###################################
+    +
+    +
+    +server {
+    +  listen *:4567 ssl;
+    +  server_name  gitlab.jonashackt.io;
+    +  server_tokens off; ## Don't show the nginx version number, a security best practice
+    +
+    +  client_max_body_size 0;
+    +  chunked_transfer_encoding on;
+    +
+    +  ## Strong SSL Security
+    +  ## https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html & https://cipherli.st/
+    +  ssl on;
+    +  ssl_certificate /etc/gitlab/ssl/gitlab.jonashackt.io.crt;
+    +  ssl_certificate_key /etc/gitlab/ssl/gitlab.jonashackt.io.key;
+    
+    ...
+```
+
+With this, we also don´t need to use the `--tls-ca-file` option to configure our gitlab-runners in [letsencrypt.yml](letsencrypt.yml) - the corresponding error is also gone now! 
+
+
 
 # Links
 

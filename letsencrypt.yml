@@ -39,7 +39,11 @@
       dest: "{{ item.dest }}"
       remote_src: yes
     with_items:
-      - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/cert.pem"
+      # - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/cert.pem"
+      #   dest: "/etc/gitlab/ssl/{{ gitlab_domain }}.crt"
+      # We need to copy/use the fullchain.pem here instead of cert.pem! Otherwise we´ll get a "Error response from daemon: Get https://gitlab.jonashackt.io:5000/v2/: x509: certificate signed by unknown authority"
+      # Just have a look into the README at "### Ubuntu & Docker don´t know Let´s Encrypt so we need to copy the fullchain.pem instead of just the cert.pem!"
+      - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/fullchain.pem"
         dest: "/etc/gitlab/ssl/{{ gitlab_domain }}.crt"
 
       - src: "/srv/dehydrated/certs/{{ gitlab_domain }}/privkey.pem"
