@@ -50,8 +50,4 @@
     uri:
       url: "{{gitlab_url}}"
 
-  - debug:
-      msg: "Your Gitlab instance is ready at your Vagrant host machine https://{{gitlab_url}}"
-
-
 

@@ -1,6 +1,12 @@
 # Prepare Gitlab on a Server (here Vagrant)
 ansible-playbook -i hostsfile prepare-gitlab.yml
 
+# If https_internal_server is set to true, be sure to provide providername, providerusername & providertoken (and maybe whitelist your current Internet IP)
+ansible-playbook -i hostsfile prepare-gitlab.yml --extra-vars "providername=yourProviderNameHere providerusername=yourUserNameHere providertoken=yourProviderTokenHere"
+
+
+### Provision only certain steps
+
 # Only install Gitlab on the server (skip Docker installation)
 ansible-playbook -i hostsfile prepare-gitlab.yml --skip-tags "install_docker"
 

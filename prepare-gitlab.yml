@@ -32,3 +32,9 @@
   - name: Install & Configure Gitlab Runner for Docker
     include_tasks: gitlab-runner.yml
     tags: gitlab_runner
+
+  - name: Congratulations!
+    debug:
+      msg:
+        - "Your Gitlab instance is ready at {{ gitlab_url }} and the Gitlab Container Registry is waiting for your docker pushes (at {{ gitlab_registry_url}})."
+        - "Just open your Browser and login!"

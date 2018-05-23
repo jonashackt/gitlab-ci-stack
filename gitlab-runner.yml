@@ -4,7 +4,7 @@
   - name: Add the GitLab Runner package repository
     shell: "curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | sudo bash"
 
-  - name: Install GitLab Runner
+  - name: Install GitLab Runner package
     apt:
       name: gitlab-runner
       state: latest
