@@ -450,6 +450,46 @@ https://docs.gitlab.com/ee/user/project/container_registry.html#build-and-push-i
 https://docs.gitlab.com/ee/user/group/#namespaces
 
 
+## Import example project with .gitlab-ci.yml and run Gitlab CI pipeline
+
+Now we´re nearly there. Just add a new password for the root user and login with that credentials. Then head over to to `Create a project` and there click on `Import Project` / `Repo by URL`:
+
+![import-project](import-project.png)
+
+Paste the example Projects git URL into __Git repository URL__ field: `https://github.com/jonashackt/restexamples.git`, change Visibility Level to __Internal__ and hit __Create Project__.
+
+Now at __CI / CD__ / __Pipelines__ fire up the Pipeline once (only this time manually since we didn´t push something new) and it should build a simple Spring Boot example project and push the resulting Image into our branch new Gitlab Container Registry:
+
+![successful-first-pipeline-run](successful-first-pipeline-run.png)
+
+The example project [restexamples](https://github.com/jonashackt/restexamples) has a [prepared .gitlab-ci.yml already](https://github.com/jonashackt/restexamples/blob/master/.gitlab-ci.yml), so it should do everything smoothly:
+
+```
+stages:
+  - build
+
+# see usage of Namespaces at https://docs.gitlab.com/ee/user/group/#namespaces
+variables:
+  REGISTRY_GROUP_PROJECT: $CI_REGISTRY/root/restexamples
+
+# see how to login at https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#using-the-gitlab-container-registry
+before_script:
+  - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+
+build-and-push:
+  stage: build
+  script:
+    - docker build . --tag $REGISTRY_GROUP_PROJECT/restexamples:latest
+    - docker push $REGISTRY_GROUP_PROJECT/restexamples:latest
+```
+
+And you should be able to see your newly pushed Image in the Gitlab Registry overview:
+
+![gitlab-registry-overview](gitlab-registry-overview.png)
+
+
+
+
 # Links
 
 * Gitlab CI REFERENCE docs: https://docs.gitlab.com/ce/ci/yaml/README.html
