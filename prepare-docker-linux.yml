@@ -45,7 +45,12 @@
       state: restarted
       enabled: yes
 
-  - name: Install Docker Compose (if configured).
+  - name: Install pip
+    apt:
+      name: python3-pip
+      state: latest
+
+  - name: Install Docker Compose
     pip:
       name: docker-compose
 
