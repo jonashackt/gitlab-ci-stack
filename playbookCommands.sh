@@ -5,10 +5,10 @@ ansible-playbook -i hostsfile prepare-gitlab.yml
 ansible-playbook -i hostsfile prepare-gitlab.yml --skip-tags "install_docker"
 
 # Create Let´s Encrypt Certificates for our Vagrant Box (non-publicly accessable server)
-ansible-playbook -i hostsfile prepare-gitlab.yml --skip-tags "install_docker,install_gitlab,gitlab_runner" --extra-vars "providername=yourProviderNameHere providerusername=yourUserNameHere providertoken=yourProviderTokenHere"
+ansible-playbook -i hostsfile prepare-gitlab.yml --skip-tags "install_docker,install_gitlab,gitlab_runner,configure_registry" --extra-vars "providername=yourProviderNameHere providerusername=yourUserNameHere providertoken=yourProviderTokenHere"
 
 # Install Gitlab only
-ansible-playbook -i hostsfile prepare-gitlab.yml --skip-tags "install_docker,letsencrypt,gitlab_runner"
+ansible-playbook -i hostsfile prepare-gitlab.yml --skip-tags "install_docker,letsencrypt,gitlab_runner,configure_registry"
 
 # Install Container Registry only
 ansible-playbook -i hostsfile prepare-gitlab.yml --skip-tags "install_docker,install_gitlab,letsencrypt,gitlab_runner"
