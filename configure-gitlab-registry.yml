@@ -1,0 +1,19 @@
+---
+  # See https://github.com/jonashackt/docker-ci-stack#gitlab-container-registry
+
+  # First we need to paste registry_external_url 'https://gitlab.jonashackt.io:4567' into the gitlab.rb
+  - name: Activate Container Registry in /etc/gitlab/gitlab.rb
+    lineinfile:
+      path: /etc/gitlab/gitlab.rb
+      line: " registry_external_url '{{ gitlab_registry_url }}'"
+
+  - name: Reconfigure Gitlab to activate Container Registry
+    shell: "gitlab-ctl reconfigure"
+    register: reconfigure_result
+
+  - name: Let´s see what Omnibus/Chef does
+    debug:
+      msg:
+       - "The reconfiguration process gave the following: "
+       - "{{reconfigure_result.stdout_lines}}"
+

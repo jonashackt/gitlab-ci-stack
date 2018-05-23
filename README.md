@@ -337,22 +337,26 @@ https://docs.gitlab.com/ee/user/project/container_registry.html
 
 If we just use our configured domain, we can follow the docs here: https://docs.gitlab.com/ee/administration/container_registry.html#configure-container-registry-under-an-existing-gitlab-domain
 
-The playbook xxx inserts the following needed config into the gitlab.rb: `registry_external_url 'https://gitlab.jonashackt.io:5000'` and this follows after a `sudo gitlab-ctl reconfigure`:
+```
+  - name: Activate Container Registry in /etc/gitlab/gitlab.rb
+    lineinfile:
+      path: /etc/gitlab/gitlab.rb
+      line: " registry_external_url '{{ gitlab_registry_url }}'"
+
+  - name: Reconfigure Gitlab to activate Container Registry
+    shell: "gitlab-ctl reconfigure"
+    register: reconfigure_result
+
+  - name: Let´s see what Omnibus/Chef does
+    debug:
+      msg:
+       - "The reconfiguration process gave the following: "
+       - "{{reconfigure_result.stdout_lines}}"
+```
+
+The playbook [configure-gitlab-registry.yml](configure-gitlab-registry.yml) inserts the following needed config into the gitlab.rb: `registry_external_url 'https://gitlab.jonashackt.io:4567'` and this follows after a `sudo gitlab-ctl reconfigure`:
 
 ![configuring-gitlab-docker-registry](configuring-gitlab-docker-registry.png)
-
-
-
-
-https://docs.gitlab.com/ee/user/project/container_registry.html#build-and-push-images
-
-
-https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#using-the-gitlab-container-registry
-
-
-### Namespaces (username, group or subgroup)
-
-https://docs.gitlab.com/ee/user/group/#namespaces
 
 
 
@@ -432,6 +436,20 @@ With this, we also don´t need to use the `--tls-ca-file` option to configure ou
 
 
 
+
+### Using the Gitlab Container Registry
+
+https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#using-the-gitlab-container-registry
+
+https://docs.gitlab.com/ee/user/project/container_registry.html#build-and-push-images
+
+> Caution: Mind the Namespaces when working with Gitlab Container Registry!!!
+
+### Namespaces (username, group or subgroup)
+
+https://docs.gitlab.com/ee/user/group/#namespaces
+
+
 # Links
 
 * Gitlab CI REFERENCE docs: https://docs.gitlab.com/ce/ci/yaml/README.html
@@ -442,5 +460,6 @@ With this, we also don´t need to use the `--tls-ca-file` option to configure ou
 
 * Why to bind mount docker.sock into your Gitlab Docker Container (instead of using Docker-in-Docker): https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
 
+* Good, but little old post abt installing Gitlab https://gitlabfan.com/setting-up-your-own-fully-functional-gitlab-https-registry-ci-runners-79901ac617c0
 
 
