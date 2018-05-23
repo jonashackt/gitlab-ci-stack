@@ -48,4 +48,7 @@
   - name: Register Gitlab Docker Runner
     shell: "gitlab-runner register --non-interactive --url '{{gitlab_url}}' --registration-token '{{gitlab_runner_registration_token}}' --description 'docker-native' --executor shell"
 
+  - name: Register Gitlab Docker Runner
+    shell: "gitlab-runner register --non-interactive --url '{{gitlab_url}}' --registration-token '{{gitlab_runner_registration_token}}' --description 'docker-native-2' --executor shell"
+
 
