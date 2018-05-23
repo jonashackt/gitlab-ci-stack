@@ -2,9 +2,15 @@
   # This playbook should work for servers, that aren´t accessable from the internet (like our local Vagrant setup here)
   # Be sure to use a real/purchased domain!
 
-  - name: Check, if there are any directory in dehydrated certs folder
+  - name: Create /srv/dehydrated/certs/ if not already there (so we can check, if there was already a dehydrated run)
+    file:
+      path: /srv/dehydrated/certs/
+      state: directory
+
+  - name: Check, if there is a directory with the domain name (like gitlab.jonashackt.io) in dehydrated certs folder
     find:
       paths: "/srv/dehydrated/certs/"
+      file_type: directory
     register: files_in_dehydrated_cert_folder
 
   - set_fact:
@@ -27,9 +33,9 @@
   - set_fact:
       success: cert_pem_in_dehydrated_cert_folder.matched != "0"
 
-  - name: Create Gitlab cert import folder /etc/gitlab/trusted-certs for later Gitlab Installation usage
+  - name: Create Gitlab cert import folder /etc/gitlab/ssl for later Gitlab Installation usage
     file:
-      path: /etc/gitlab/trusted-certs
+      path: /etc/gitlab/ssl
       state: directory
     when: success
 
