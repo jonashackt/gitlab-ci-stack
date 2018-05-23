@@ -24,8 +24,4 @@ Vagrant.configure("2") do |config|
         virtualbox.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
     end
 
-    # Forwarding the Guest to Host ports, so that we can access it easily from outside the VM
-    config.vm.network "forwarded_port", guest: 80, host: 30080, host_ip: "127.0.0.1", id: "gitlab"
-    config.vm.network "forwarded_port", guest: 443, host: 30443, host_ip: "127.0.0.1", id: "gitlab_https"
-
 end
