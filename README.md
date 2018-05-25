@@ -1,8 +1,8 @@
-docker-ci-stack
+gitlab-ci-stack
 ======================================================================================
-[![Build Status](https://travis-ci.org/jonashackt/docker-ci-stack.svg?branch=master)](https://travis-ci.org/jonashackt/docker-ci-stack)
+[![Build Status](https://travis-ci.org/jonashackt/gitlab-ci-stack.svg?branch=master)](https://travis-ci.org/jonashackt/gitlab-ci-stack)
 
-Full CI pipeline project based on Docker running Gitlab &amp; Gitlab CI, Artifactory, SonarQube fascilitating the Docker Builder Pattern
+Full CI pipeline project based on Gitlab & Gitlab CI running Docker, completely automated setup by Vagrant & Ansible, providing Let´s Encrypt certificates for private Servers, multiple Gitlab-Runners and the Gitlab Container Registry
 
 This project is somehow based on the thought of https://github.com/marcelbirkner/docker-ci-tool-stack. But since the good old days of Jenkins times changed "a bit". Maybe today Jenkins incl. 2.x/Pipeline-plugin isn´t the way to go - or it´s just the way, if you really want to have a hard time. Why? Here are some points:
 
@@ -55,9 +55,8 @@ To achieve a fully comprehensible setup here, we some DevOps tools FTW:
 * Ansible: This shiny pice will contain __ALL__ steps necessary to provision a Gitlab server with __everything__ needed. It´s also a great documentation what´s needed to setup a Gitlab server.
 * Vagrant: To just fire up a server locally that is based on a certain OS - because that´s needed to craft a Ansible playbook. But this is just for demonstration purposes - you can switch over to your Gitlab server by just editing the [hostsfile](hostsfile) and adding `[yourcompanygitlab]` together with it´s IP.
 
-## Let´s install & run Gitlab inside our Server/VagrantBox with Ansible
 
-> All the Installation process is based upon the "Omnibus GitLab installation" (NOT the from source option)
+## Prerequisites
 
 So let´s go: Fire up our server with:
 
@@ -70,31 +69,65 @@ If the server is up and running (this may take a while when doing it for the fir
 Let´s do a connection check first. Only at the first run, we also need to surround the `ping` with those environment variables:
 
 ```
-ansible docker-ci-stack -i hostsfile -m ping
+ansible gitlab-ci-stack -i hostsfile -m ping
 ```
 
-If this gave a `SUCCESS`, we can move on to really execute our ansible script (from the second run on you can start here!).
+If this gave a `SUCCESS`, we can move on to really execute our Ansible playbooks.
 
-This will just walk through the standard Gitlab installation guide for Ubuntu - just automatically: https://about.gitlab.com/installation/#ubuntu (others are available also [like CentOS](https://about.gitlab.com/installation/#centos-6):
+> All the Installation process is based upon the "Omnibus GitLab installation" (NOT the from source option)
+
+
+## Let´s install & run Gitlab inside our Server/VagrantBox with Ansible
+
+
+To just execute the playbook and install everything needed to have a fully functional Gitlab-Instance, you only need to run the following Ansible Playbook.
+ 
+Just be sure to configure your Domain name inside [prepare-gitlab.yml](prepare-gitlab.yml):
+
+```
+  vars:
+    gitlab_domain: "gitlab.jonashackt.io"
+``` 
+ 
+and provide `providername`, `providerusername` & `providertoken` for your DNS Providers´s API in `--extra-vars` (and maybe whitelist your current Internet IP):
+
+```
+ansible-playbook -i hostsfile prepare-gitlab.yml --extra-vars "providername=yourProviderNameHere providerusername=yourUserNameHere providertoken=yourProviderTokenHere"
+```
+
+Only, if you don´t use Vagrant or an only internally accessible Server, you can ignore the extra-vars - Gitlab will handle Let´s Encrypt for you then:
 
 ```
 ansible-playbook -i hostsfile prepare-gitlab.yml
 ```
 
-Now just grab a coffee. If you return to your machine, enter the http://localhost:30080 and your Gitlab should be running fine:
-
-![running-gitlab](screenshots/running-gitlab.png)
+If you want to know more about the installation Process, just read on:
 
 
-## Install & configure Gitlab Docker Runner
 
-The [gitlab-runner.yml](gitlab-runner.yml) shows how to install and register the Gitlab Docker Runner in non-interactive mode:
+## Install & Configure Docker 
 
-As https://docs.gitlab.com/runner/install/linux-repository.html#installing-the-runner states, we need to add the Gitlab Runner package repository and install the Runner via apt-get.
+The [prepare-docker-ubuntu.yml](prepare-docker-ubuntu.yml) just walks through the [standard Docker docs guide on how to install Docker on Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/). If you use another Distro, you can simply change modules etc. to match your Linux.
 
-Before we´re able to register the Runner, we need to extract the Registration Token somehow automatically from our Gitlab instance. Since there´s no API at the moment (see https://gitlab.com/gitlab-org/gitlab-ce/issues/24030, https://gitlab.com/gitlab-org/gitlab-runner/issues/1727), we need to obtain it quite hacky through a database call.
+The only thing special here is how we install Docker Compose, which [is described in the Docs](https://docs.docker.com/compose/install/#install-compose) with that unappealing way of always using a hard-coded version in the curl. Therefore the hint: 
 
-The last step then is to register the Gitlab Docker Runner in [non-interactive mode](https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/commands/README.md#non-interactive-registration).
+> Use the latest Compose release number in the download command.
+
+But there´s a much nicer way, because [Python PIP](https://pypi.org/project/pip/) has the current package ready for us:
+
+```
+  - name: Install pip
+    apt:
+      name: python3-pip
+      state: latest
+
+  - name: Install Docker Compose
+    pip:
+      name: docker-compose
+```
+
+Now we don´t need to mess with maintaining the Docker Compose version number & the upgrade process any more!
+
 
 
 ## Nice Gitlab URL with DNS configuration
@@ -107,15 +140,15 @@ To enable that on the Host machine, we need the [vagrant-dns Plugin](https://git
 vagrant plugin install vagrant-dns
 ```
 
-Now we configure a domain name as `pipeline` in our Vagrantfile:
+Now we configure a domain name such as `jonashackt` and a TLD like `io` in our Vagrantfile:
 
 ```
-masterlinux.vm.hostname = "pipeline"
+config.vm.hostname = "jonashackt"
 
-masterlinux.dns.tld = "ci"
+config.dns.tld = "io"
 ```
 
-Now we need to register the vagrant-dns Server with the TLD `ci` as a DNS resolver:
+Now we need to register the vagrant-dns Server with the TLD `io` as a DNS resolver:
 
 ```
 vagrant dns --install
@@ -127,7 +160,7 @@ Now check with `scutil --dns` (on a Mac), if the resolver is part of your DNS co
 ...
 
 resolver #10
-  domain   : ci
+  domain   : io
   nameserver[0] : 127.0.0.1
   port     : 5300
   flags    : Request A records, Request AAAA records
@@ -139,8 +172,8 @@ resolver #10
 This looks good! Now after the usual `vagrant up`, try if you´re able to reach our Vagrant Box using our defined domain by typing e.g. `dscacheutil -q host -a name gitlab.pipeline.ci`:
 
 ```
-$:docker-ci-stack jonashecht$ dscacheutil -q host -a name gitlab.pipeline.ci
-  name: gitlab.pipeline.ci
+$:gitlab-ci-stack jonashecht$ dscacheutil -q host -a name gitlab.jonashackt.io
+  name: gitlab.jonashackt.io
   ip_address: 172.16.2.15
 ```
 
@@ -157,7 +190,8 @@ virtualbox.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
 After we configured that, we can do our well-known `vagrant up`.
 
 
-Now just open up your Browser and go to `docker.gitlab.ci`
+Now we should be able to ping `gitlab.jonashackt.io`.
+
 
 
 ## Enable https for Gitlab on public accessable server
@@ -293,7 +327,7 @@ Just change `yourProviderNameHere`, `yourUserNameHere` and `yourProviderTokenHer
 
 [According to the docs there are 2 ways to configure HTTPS in Gitlab](https://docs.gitlab.com/omnibus/settings/nginx.html): The [automatic Let´s Encrypt way](https://docs.gitlab.com/omnibus/settings/ssl.html#let-39-s-encrypt-integration), which we sadly can´t use in our scenario here, where our Vagrant Box isn´t publically accessible - and [the way to manually configure HTTPS](https://docs.gitlab.com/omnibus/settings/nginx.html#manually-configuring-https), the one we need to choose here.
 
-Therefore we set the `external_url` via the Environment variable `EXTERNAL_URL: "{{gitlab_url}}"` at the Gitlab Omnibus installation process to contain an `https`, in our example here: `https://gitlab.jonashackt.io` (remember you need to own the domain or at least need access to the DNS provider for the [Let´s Encrypt process for internal servers](https://github.com/jonashackt/docker-ci-stack#lets-encrypt-for-our-gitlab-on-virtualboxvagrant)).
+Therefore we set the `external_url` via the Environment variable `EXTERNAL_URL: "{{gitlab_url}}"` at the Gitlab Omnibus installation process to contain an `https`, in our example here: `https://gitlab.jonashackt.io` (remember you need to own the domain or at least need access to the DNS provider for the [Let´s Encrypt process for internal servers](https://github.com/jonashackt/gitlab-ci-stack#lets-encrypt-for-our-gitlab-on-virtualboxvagrant)).
 
 After that, Gitlab Omnibus installation will look for certificates named `/etc/gitlab/ssl/gitlab.jonashackt.io.key` & `/etc/gitlab/ssl/gitlab.jonashackt.io.crt` - note that both file names are derived from the domain name `gitlab.jonashackt.io`.
 
@@ -325,6 +359,63 @@ Now you can use your Gitlab without cryptic error messages because of self-signe
 
 ![complete_https_letsencrypt_gitlab](screenshots/complete_https_letsencrypt_gitlab.png) 
 
+
+
+## Install Gitlab itself
+
+The playbook [install-gitlab.yml](install-gitlab.yml) will walk through the standard Gitlab installation guide for Ubuntu - just automatically: https://about.gitlab.com/installation/#ubuntu (others are available also [like CentOS](https://about.gitlab.com/installation/#centos-6):
+
+```
+  - name: Update apt and autoremove
+    apt:
+      update_cache: yes
+      cache_valid_time: 3600
+      autoremove: yes
+
+  - name: Install curl, openssh-server, ca-certificates & postfix
+    apt:
+      name:
+        - curl
+        - openssh-server
+        - ca-certificates
+        - postfix
+      state: latest
+
+  - name: Add the GitLab package repository
+    shell: "curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | sudo bash"
+
+  - name: Update apt and autoremove
+    apt:
+      update_cache: yes
+      cache_valid_time: 3600
+      autoremove: yes
+
+  - name: Install Gitlab with Omnibus-Installer
+    apt:
+      name: gitlab-ce
+      state: latest
+    environment:
+      EXTERNAL_URL: "{{gitlab_url}}"
+    ignore_errors: true
+    register: gitlab_install_result
+
+  - name: Gitlab Omnibus is based on Chef and will give many insight, what it does in the background
+    debug:
+      msg:
+       - "The installation process said the following: "
+       - "{{gitlab_install_result.stdout_lines}}"
+
+  - name: Wait for Gitlab to start up
+    wait_for:
+      port: 443
+      delay: 10
+      sleep: 5
+
+  - name: Let´s check, if Gitlab is up and running
+    uri:
+      url: "{{gitlab_url}}"
+
+```
 
 
 
@@ -433,6 +524,37 @@ This configures also the Gitlab Container Registry, although it seems to be an c
 ```
 
 With this, we also don´t need to use the `--tls-ca-file` option to configure our gitlab-runners in [letsencrypt.yml](letsencrypt.yml) - the corresponding error is also gone now! 
+
+
+
+
+## Install & configure Gitlab Docker Runner
+
+The [gitlab-runner.yml](gitlab-runner.yml) shows how to install and register the Gitlab Docker Runner in non-interactive mode:
+
+As https://docs.gitlab.com/runner/install/linux-repository.html#installing-the-runner states, we need to add the Gitlab Runner package repository and install the Runner via apt-get.
+
+Before we´re able to register the Runner, we need to extract the Registration Token somehow automatically from our Gitlab instance. Since there´s no API at the moment (see https://gitlab.com/gitlab-org/gitlab-ce/issues/24030, https://gitlab.com/gitlab-org/gitlab-runner/issues/1727), we need to obtain it quite hacky through a database call.
+
+```
+  # To register the Gitlab Runner, we need to obtain the Registration Token from our Gitlab instance
+  # Because this will change every time we start up Gitlab (and/or Vagrant Box/Ansible setup, see https://gitlab.com/gitlab-org/gitlab-ce/issues/3703)
+  # we need to access it somehow. Sadly there´s no API atm (see https://gitlab.com/gitlab-org/gitlab-ce/issues/24030,
+  # https://gitlab.com/gitlab-org/gitlab-runner/issues/1727), so we have to dive directly into the Gitlab database :(
+  - name: Extract Runner Registration Token via SQL query
+    become: true
+    become_user: gitlab-psql
+    vars:
+        ansible_ssh_pipelining: true
+        query: "SELECT runners_registration_token FROM application_settings ORDER BY id DESC LIMIT 1"
+        psql_exec: "/opt/gitlab/embedded/bin/psql"
+        gitlab_db_name: "gitlabhq_production"
+    shell: '{{ psql_exec }} -h /var/opt/gitlab/postgresql/ -d {{ gitlab_db_name }} -t -A -c "{{ query }}"'
+    register: gitlab_runner_registration_token_result
+```
+
+The last step then is to register the Gitlab Docker Runner in [non-interactive mode](https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/commands/README.md#non-interactive-registration).
+
 
 
 
