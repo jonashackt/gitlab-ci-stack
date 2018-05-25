@@ -1,9 +1,9 @@
 # Prepare Gitlab on a Server (here Vagrant)
-ansible-playbook -i hostsfile prepare-gitlab.yml
-
 # If https_internal_server is set to true, be sure to provide providername, providerusername & providertoken (and maybe whitelist your current Internet IP)
 ansible-playbook -i hostsfile prepare-gitlab.yml --extra-vars "providername=yourProviderNameHere providerusername=yourUserNameHere providertoken=yourProviderTokenHere"
 
+# Only, if you don´t use Vagrant or an only internally accessible Server, you can ignore the extra-vars - Gitlab will handle Let´s Encrypt for you then
+ansible-playbook -i hostsfile prepare-gitlab.yml
 
 ### Provision only certain steps
 

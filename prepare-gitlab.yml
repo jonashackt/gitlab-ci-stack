@@ -6,19 +6,16 @@
     gitlab_domain: "gitlab.jonashackt.io"
     gitlab_url: "https://{{ gitlab_domain }}"
     gitlab_registry_url: "{{ gitlab_url }}:4567"
-    https_internal_server: true
 
   tasks:
-  - name: Checking Ansible connectivity to Linux nodes
-    ping:
 
   - name: Prepare Docker on Linux node
-    include_tasks: prepare-docker-linux.yml
+    include_tasks: prepare-docker-ubuntu.yml
     tags: install_docker
 
-  - name: Prepare Let´s Encrypt certificates for Gitlab
+  - name: Prepare Let´s Encrypt certificates for Gitlab, if we setup an internal Server like Vagrant (you have to provide providername, providerusername & providertoken as extra-vars!)
     include_tasks: letsencrypt.yml
-    when: https_internal_server
+    when: providername is defined
     tags: letsencrypt
 
   - name: Install Gitlab on Linux node
