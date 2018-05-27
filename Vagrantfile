@@ -1,8 +1,8 @@
 Vagrant.configure("2") do |config|
 
     config.vm.box = "ubuntu/xenial64"
+    # Register domain and tld for later access prettiness (working with vagrant-dns Plugin https://github.com/BerlinVagrant/vagrant-dns)
     config.vm.hostname = "jonashackt"
-    # Register domain ci for later access prettiness
     config.dns.tld = "io"
 
     # As to https://www.vagrantup.com/docs/multi-machine/ & https://www.vagrantup.com/docs/networking/private_network.html

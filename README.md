@@ -58,7 +58,28 @@ To achieve a fully comprehensible setup here, we some DevOps tools FTW:
 
 ## Prerequisites
 
-So let´s go: Fire up our server with:
+Be sure to have the following tools installed: Ansible, VirtualBox & Vagrant. On a Mac this is simple:
+
+```
+brew install ansible
+brew cask install virtualbox
+brew cask install vagrant
+```
+
+Our setup uses the [vagrant-dns Plugin](https://github.com/BerlinVagrant/vagrant-dns). Just install it with:
+
+```
+vagrant plugin install vagrant-dns
+```
+
+Now be sure to add your domain name into the [Vagrantfile](Vagrantfile). As I own the domain [jonashackt.io](jonashackt.io), I added the following:
+
+```
+    config.vm.hostname = "jonashackt"
+    config.dns.tld = "io"
+``` 
+
+That´s all, we´re ready to fire up our server with:
 
 ```
 vagrant up
@@ -66,7 +87,7 @@ vagrant up
 
 If the server is up and running (this may take a while when doing it for the first time), we can execute Ansible. 
 
-Let´s do a connection check first. Only at the first run, we also need to surround the `ping` with those environment variables:
+Let´s do a connection check first:
 
 ```
 ansible gitlab-ci-stack -i hostsfile -m ping
@@ -169,7 +190,7 @@ resolver #10
 ...
 ```
 
-This looks good! Now after the usual `vagrant up`, try if you´re able to reach our Vagrant Box using our defined domain by typing e.g. `dscacheutil -q host -a name gitlab.pipeline.ci`:
+This looks good! Now after the usual `vagrant up`, try if you´re able to reach our Vagrant Box using our defined domain by typing e.g. `dscacheutil -q host -a name gitlab.jonashackt.io`:
 
 ```
 $:gitlab-ci-stack jonashecht$ dscacheutil -q host -a name gitlab.jonashackt.io
@@ -207,7 +228,7 @@ If you have an externally accessable server and provision it with these Ansible 
 
 __BUT__: The problem is our local setup here: Let´s Encrypt wont be able to validate the certificate for our domain, since it´s just a local DNS installation.
 
-That sounds like we´re in need of a different way. Because if we just use our domain with https like https://gitlab.pipeline.ci/, our Browser will complain:
+That sounds like we´re in need of a different way. Because if we just use our domain with https like https://gitlab.jonashackt.io/, our Browser will complain:
 
 ![insecure-https](screenshots/insecure-https.png)
 
@@ -215,7 +236,7 @@ and a `git push` will result into the following problem:
 
 ```
 $ git push
-fatal: unable to access 'https://gitlab.pipeline.ci/root/yourRepoNameHere/': SSL certificate problem: self signed certificate
+fatal: unable to access 'https://gitlab.jonashackt.io/root/yourRepoNameHere/': SSL certificate problem: self signed certificate
 ```
 
 Although Let´s Encrypt was designed to be used with public accessable websites, there are ways to create these Certificates for non-public servers also. All you need to have is a __regularly registered domain__ - which maybe sounds like a big issue, but isn´t really a problem! (don´t try to use already registered ones, this won´t work!)
