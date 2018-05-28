@@ -13,7 +13,7 @@
   # Because this will change every time we start up Gitlab (and/or Vagrant Box/Ansible setup, see https://gitlab.com/gitlab-org/gitlab-ce/issues/3703)
   # we need to access it somehow. Sadly there´s no API atm (see https://gitlab.com/gitlab-org/gitlab-ce/issues/24030,
   # https://gitlab.com/gitlab-org/gitlab-runner/issues/1727), so we have to dive directly into the Gitlab database :(
-  - name: Extract Runner Registration Token via SQL query
+  - name: Extract Runner Registration Token directly from Gitlab DB
     become: true
     become_user: gitlab-psql
     vars:
@@ -33,15 +33,15 @@
       msg: "{{gitlab_runner_registration_token}}"
 
   # Register Gitlab Runner
-  # see https://docs.gitlab.com/ce/ci/docker/using_docker_images.html#register-docker-runner
-  # and this for non-interactive mode:
-  # https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/commands/README.md#non-interactive-registration
   - name: Unregister all previously used Gitlab Runners
     shell: "sudo gitlab-runner unregister --all-runners"
 
   - name: Add gitlab-runner user to docker group
     shell: "sudo usermod -aG docker gitlab-runner"
 
+  # see https://docs.gitlab.com/ce/ci/docker/using_docker_images.html#register-docker-runner
+  # and this for non-interactive mode:
+  # https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/commands/README.md#non-interactive-registration
   - name: Register Gitlab-Runners using shell executor
     shell: "gitlab-runner register --non-interactive --url '{{gitlab_url}}' --registration-token '{{gitlab_runner_registration_token}}' --description '{{ item.name }}' --executor shell"
     with_items:

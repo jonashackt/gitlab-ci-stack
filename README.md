@@ -249,7 +249,7 @@ And you often also need to whitelist the IP your approaching the DNS provider AP
 
 > There has been done some great work in the field of generating Let´s Encrypt certificates for private servers (see https://blog.thesparktree.com/generating-intranet-and-private-network-ssl)
 
-The playbook [letsencrypt.yml](letsencrypt.yml) (which is choosen if `https_internal_server` is set to `true`) just automates all the steps described in the mentioned post. It uses [dehydrated](https://github.com/lukas2511/dehydrated) as an alternative Let´s Encrypt client togehter with [lexicon](https://github.com/AnalogJ/lexicon), which is standardises the way how to manipulate DNS records via their API [on multiple DNS providers](https://github.com/AnalogJ/lexicon#providers). We install both tools with Ansible:
+The playbook [obtain-letsencrypt-certs-dehydrated-lexicon.yml](obtain-letsencrypt-certs-dehydrated-lexicon.yml) just automates all the steps described in the mentioned post. It uses [dehydrated](https://github.com/lukas2511/dehydrated) as an alternative Let´s Encrypt client togehter with [lexicon](https://github.com/AnalogJ/lexicon), which is standardises the way how to manipulate DNS records via their API [on multiple DNS providers](https://github.com/AnalogJ/lexicon#providers). We install both tools with Ansible:
 
 ```
   # This playbook should work for servers, that aren´t accessable from the internet (like our local Vagrant setup here)
@@ -608,8 +608,19 @@ Now at __CI / CD__ / __Pipelines__ fire up the Pipeline once (only this time man
 The example project [restexamples](https://github.com/jonashackt/restexamples) has a [prepared .gitlab-ci.yml already](https://github.com/jonashackt/restexamples/blob/master/.gitlab-ci.yml), so it should do everything smoothly:
 
 ```
+# One of the new trends in Continuous Integration/Deployment is to:
+# (see https://docs.gitlab.com/ee/ci/docker/using_docker_build.html)
+#
+# 1. Create an application image
+# 2. Run tests against the created image
+# 3. Push image to a remote registry
+# 4. Deploy to a server from the pushed image
+
 stages:
   - build
+  - test
+  - push
+  - deploy
 
 # see usage of Namespaces at https://docs.gitlab.com/ee/user/group/#namespaces
 variables:
@@ -619,16 +630,40 @@ variables:
 before_script:
   - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
 
-build-and-push:
+build-image:
   stage: build
   script:
     - docker build . --tag $REGISTRY_GROUP_PROJECT/restexamples:latest
+
+test-image:
+  stage: test
+  script:
+    - echo Insert fancy API test here!
+
+push-image:
+  stage: push
+  script:
     - docker push $REGISTRY_GROUP_PROJECT/restexamples:latest
+
+deploy-2-dev:
+  stage: deploy
+  script:
+    - echo You should use Ansible here!
+  environment:
+    name: dev
+    url: https://dev.jonashackt.io
+
+
 ```
 
 And you should be able to see your newly pushed Image in the Gitlab Registry overview:
 
 ![gitlab-registry-overview](screenshots/gitlab-registry-overview.png)
+
+And there´s also the Environments tab, witch is a great view on your Pipeline. Here you can track which Deployment went to which infrastructural stage:
+
+![gitlab-environments](screenshots/gitlab-environments.png)
+
 
 
 
