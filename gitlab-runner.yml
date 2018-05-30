@@ -51,6 +51,15 @@
       - { name: shell-runner-4 }
       - { name: shell-runner-5 }
 
+  # number of concurrent runners needs to be set directly in config-file in order to actually run jobs in parallel
+  # see: https://gitlab.com/gitlab-org/gitlab-runner/issues/1539
+  - name: set concurrent number of runners in gitlab-runner config
+    ini_file:
+      path: /etc/gitlab-runner/config.toml
+      section: 
+      option: concurrent
+      value: 5
+
   - name: Retrieve all registered Gitlab Runners
     shell: "gitlab-runner list"
     register: runner_result
