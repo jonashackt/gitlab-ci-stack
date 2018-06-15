@@ -39,7 +39,7 @@
       state: directory
     when: success
 
-  - name: Copy certificate files to Gitlab cert import folder /etc/gitlab/trusted-certs (see https://docs.gitlab.com/omnibus/settings/ssl.html#details-on-how-gitlab-and-ssl-work)
+  - name: Copy certificate files to Gitlab cert import folder /etc/gitlab/ssl (see https://docs.gitlab.com/omnibus/settings/ssl.html#details-on-how-gitlab-and-ssl-work)
     copy:
       src: "{{ item.src }}"
       dest: "{{ item.dest }}"

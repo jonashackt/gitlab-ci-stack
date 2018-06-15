@@ -355,13 +355,13 @@ After that, Gitlab Omnibus installation will look for certificates named `/etc/g
 Everything needed is done by the [letsencrypt.yml](letsencrypt.yml), it will just copy the generated certificates with the correct name to the correct location:
 
 ```
-  - name: Create Gitlab cert import folder /etc/gitlab/trusted-certs for later Gitlab Installation usage
+  - name: Create Gitlab cert import folder /etc/gitlab/ssl for later Gitlab Installation usage
     file:
-      path: /etc/gitlab/trusted-certs
+      path: /etc/gitlab/ssl
       state: directory
     when: success
 
-  - name: Copy certificate files to Gitlab cert import folder /etc/gitlab/trusted-certs (see https://docs.gitlab.com/omnibus/settings/ssl.html#details-on-how-gitlab-and-ssl-work)
+  - name: Copy certificate files to Gitlab cert import folder /etc/gitlab/ssl (see https://docs.gitlab.com/omnibus/settings/ssl.html#details-on-how-gitlab-and-ssl-work)
     copy:
       src: "{{ item.src }}"
       dest: "{{ item.dest }}"
