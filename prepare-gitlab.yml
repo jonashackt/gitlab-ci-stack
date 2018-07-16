@@ -6,6 +6,7 @@
     gitlab_domain: "gitlab.jonashackt.io"
     gitlab_url: "https://{{ gitlab_domain }}"
     gitlab_registry_url: "{{ gitlab_url }}:4567"
+    gitlab_runner_count: 5
 
   tasks:
 

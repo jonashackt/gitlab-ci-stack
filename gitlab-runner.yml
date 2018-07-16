@@ -43,13 +43,8 @@
   # and this for non-interactive mode:
   # https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/commands/README.md#non-interactive-registration
   - name: Register Gitlab-Runners using shell executor
-    shell: "gitlab-runner register --non-interactive --url '{{gitlab_url}}' --registration-token '{{gitlab_runner_registration_token}}' --description '{{ item.name }}' --executor shell"
-    with_items:
-      - { name: shell-runner-1 }
-      - { name: shell-runner-2 }
-      - { name: shell-runner-3 }
-      - { name: shell-runner-4 }
-      - { name: shell-runner-5 }
+    shell: "gitlab-runner register --non-interactive --url '{{gitlab_url}}' --registration-token '{{gitlab_runner_registration_token}}' --description 'shell-runner-{{ item }}' --executor shell"
+    loop: "{{ range(1,gitlab_runner_count + 1)|list }}"
 
   # number of concurrent runners needs to be set directly in config-file in order to actually run jobs in parallel
   # see: https://gitlab.com/gitlab-org/gitlab-runner/issues/1539
@@ -58,7 +53,7 @@
       path: /etc/gitlab-runner/config.toml
       section: 
       option: concurrent
-      value: 5
+      value: "{{ gitlab_runner_count }}"
 
   - name: Retrieve all registered Gitlab Runners
     shell: "gitlab-runner list"
