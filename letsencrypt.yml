@@ -2,11 +2,6 @@
   # This playbook should work for servers, that aren´t accessable from the internet (like our local Vagrant setup here)
   # Be sure to use a real/purchased domain!
 
-  - name: Create /srv/dehydrated/certs/ if not already there (so we can check, if there was already a dehydrated run)
-    file:
-      path: /srv/dehydrated/certs/
-      state: directory
-
   - name: Check, if there is a directory with the domain name (like gitlab.jonashackt.io) in dehydrated certs folder
     find:
       paths: "/srv/dehydrated/certs/"
@@ -22,7 +17,7 @@
     when: certs_folder_empty
 
   - name: Obtain new Let´s Encrypt certificates for our internally-only accessable VagrantBox
-    include_tasks: obtain-letsencrypt-certs-dehydrated-lexicon.yml
+    import_tasks: obtain-letsencrypt-certs-dehydrated-lexicon.yml
     when: certs_folder_empty
 
   - name: Check, if generation of new certificates was successful
