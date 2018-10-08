@@ -11,24 +11,24 @@
   tasks:
 
   - name: Prepare Docker on Linux node
-    include_tasks: prepare-docker-ubuntu.yml
+    import_tasks: prepare-docker-ubuntu.yml
     tags: docker
 
   - name: Prepare Let´s Encrypt certificates for Gitlab, if we setup an internal Server like Vagrant (you have to provide providername, providerusername & providertoken as extra-vars!)
-    include_tasks: letsencrypt.yml
+    import_tasks: letsencrypt.yml
     when: providername is defined
     tags: letsencrypt
 
   - name: Install Gitlab on Linux node
-    include_tasks: install-gitlab.yml
+    import_tasks: install-gitlab.yml
     tags: install_gitlab
 
   - name: Configure Gitlab Container Registry
-    include_tasks: configure-gitlab-registry.yml
+    import_tasks: configure-gitlab-registry.yml
     tags: configure_registry
 
   - name: Install & Register Gitlab Runner for Docker
-    include_tasks: gitlab-runner.yml
+    import_tasks: gitlab-runner.yml
     tags: gitlab_runner
 
   - name: Congratulations!
