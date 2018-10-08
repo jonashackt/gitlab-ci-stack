@@ -1,7 +1,5 @@
 ansible_user: vagrant
-#ansible_password: vagrant
 ansible_connection: ssh
-ansible_port: 2222
 
 # By default (config.ssh.insert_key is defaulting to true, even if unset) Vagrant generates a new Keypair and places the private key
 # inside .vagrant/machines/default/virtualbox/private_key & automatically copies the public key to /home/vagrant/.ssh/authorized_keys
