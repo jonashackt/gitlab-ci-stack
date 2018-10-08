@@ -6,7 +6,7 @@ ansible_port: 2222
 # By default (config.ssh.insert_key is defaulting to true, even if unset) Vagrant generates a new Keypair and places the private key
 # inside .vagrant/machines/default/virtualbox/private_key & automatically copies the public key to /home/vagrant/.ssh/authorized_keys
 # the path should remain stable, but if it changes, just check with `vagrant ssh-config` on commandline
-ansible_ssh_private_key_file: .vagrant/machines/default/virtualbox/private_key
+ansible_ssh_private_key_file: .vagrant/machines/gitlab-ci-stack/virtualbox/private_key
 
 # Ubuntu 16.04 comes without Python 2, so one gets errors like "Shared connection to 127.0.0.1 closed.\r\n", "module_stdout": "/bin/sh: 1: /usr/bin/python: not found\r\n",
 # as Python 3 is already there, we´re switching over to it (see http://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html#list-of-behavioral-inventory-parameters)

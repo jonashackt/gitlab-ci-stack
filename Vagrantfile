@@ -1,5 +1,6 @@
 Vagrant.configure("2") do |config|
 
+    config.vm.define "gitlab-ci-stack"
     config.vm.box = "ubuntu/bionic64"
     # Register domain and tld for later access prettiness (working with vagrant-dns Plugin https://github.com/BerlinVagrant/vagrant-dns)
     config.vm.hostname = "jonashackt"
@@ -14,7 +15,7 @@ Vagrant.configure("2") do |config|
     config.vm.network "forwarded_port", guest: 22, host: 2222, host_ip: "127.0.0.1", id: "ssh"
 
     config.vm.provider :virtualbox do |virtualbox|
-        virtualbox.name = "docker-ci-stack"
+        virtualbox.name = "gitlab-ci-stack"
         virtualbox.gui = true
         virtualbox.memory = 4096
         virtualbox.cpus = 2
