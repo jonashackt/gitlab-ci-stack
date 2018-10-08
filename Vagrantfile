@@ -1,6 +1,6 @@
 Vagrant.configure("2") do |config|
 
-    config.vm.box = "ubuntu/xenial64"
+    config.vm.box = "ubuntu/bionic64"
     # Register domain and tld for later access prettiness (working with vagrant-dns Plugin https://github.com/BerlinVagrant/vagrant-dns)
     config.vm.hostname = "jonashackt"
     config.dns.tld = "io"
@@ -23,5 +23,8 @@ Vagrant.configure("2") do |config|
         # Forward DNS resolver from host (vagrant dns) to box
         virtualbox.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
     end
+
+    # deactivate Guest additions update for now
+    config.vbguest.no_install = true
 
 end
