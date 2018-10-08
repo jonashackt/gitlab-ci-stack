@@ -1,11 +1,6 @@
 ---
   # See https://about.gitlab.com/installation/#ubuntu for the installation docs
   # all the necessary steps are executed in this script here
-  - name: Update apt and autoremove
-    apt:
-      update_cache: yes
-      cache_valid_time: 3600
-      autoremove: yes
 
   - name: Install curl, openssh-server, ca-certificates & postfix
     apt:
@@ -19,11 +14,9 @@
   - name: Add the GitLab package repository
     shell: "curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | sudo bash"
 
-  - name: Update apt and autoremove
+  - name: Update apt
     apt:
       update_cache: yes
-      cache_valid_time: 3600
-      autoremove: yes
 
   - name: Install Gitlab with Omnibus-Installer
     apt:

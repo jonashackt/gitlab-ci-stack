@@ -9,7 +9,6 @@
     gitlab_runner_count: 5
 
   tasks:
-
   - name: Update apt
     apt:
       update_cache: yes
@@ -26,15 +25,15 @@
 
   - name: Install Gitlab on Linux node
     import_tasks: install-gitlab.yml
-    tags: install_gitlab
+    tags: gitlab
 
   - name: Configure Gitlab Container Registry
     import_tasks: configure-gitlab-registry.yml
-    tags: configure_registry
+    tags: registry
 
   - name: Install & Register Gitlab Runner for Docker
     import_tasks: gitlab-runner.yml
-    tags: gitlab_runner
+    tags: runner
 
   - name: Congratulations!
     debug:
