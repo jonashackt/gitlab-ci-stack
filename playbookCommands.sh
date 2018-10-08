@@ -9,6 +9,9 @@ ansible-playbook -i hosts prepare-gitlab.yml
 
 ### Provision only certain steps
 
+# Only apt-get update
+ansible-playbook -i hosts prepare-gitlab.yml --tags "update"
+
 # Only install Gitlab on the server (skip Docker installation)
 ansible-playbook -i hosts prepare-gitlab.yml --tags "docker"
 

@@ -10,6 +10,11 @@
 
   tasks:
 
+  - name: Update apt
+    apt:
+      update_cache: yes
+    tags: update
+
   - name: Prepare Docker on Linux node
     import_tasks: prepare-docker-ubuntu.yml
     tags: docker

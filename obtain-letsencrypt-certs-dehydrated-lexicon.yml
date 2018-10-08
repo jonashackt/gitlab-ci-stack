@@ -3,18 +3,13 @@
   # Be sure to use a real/purchased domain!
 
   # The playbook automates all the steps mentioned here https://blog.thesparktree.com/generating-intranet-and-private-network-ssl
-  - name: Update apt
-    apt:
-      update_cache: yes
-
-  - name: Install openssl, curl, sed, grep, mktemp, git
+  - name: Install openssl, curl, sed, grep, git
     apt:
       name:
         - openssl
         - curl
         - sed
         - grep
-        - mktemp
         - git
       state: latest
 
