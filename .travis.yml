@@ -23,7 +23,7 @@ install:
 
 script:
   # Basic playbook syntax check
-  - ansible-playbook -i hostsfile prepare-gitlab.yml --syntax-check
+  - ansible-playbook -i hosts prepare-gitlab.yml --syntax-check
 
 notifications:
   webhooks: https://galaxy.ansible.com/api/v1/notifications/

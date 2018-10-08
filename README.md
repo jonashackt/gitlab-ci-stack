@@ -53,7 +53,7 @@ What I really love is to achieve comprehensible solutions that are usable as is 
 To achieve a fully comprehensible setup here, we some DevOps tools FTW:
 
 * Ansible: This shiny pice will contain __ALL__ steps necessary to provision a Gitlab server with __everything__ needed. It´s also a great documentation what´s needed to setup a Gitlab server.
-* Vagrant: To just fire up a server locally that is based on a certain OS - because that´s needed to craft a Ansible playbook. But this is just for demonstration purposes - you can switch over to your Gitlab server by just editing the [hostsfile](hostsfile) and adding `[yourcompanygitlab]` together with it´s IP.
+* Vagrant: To just fire up a server locally that is based on a certain OS - because that´s needed to craft a Ansible playbook. But this is just for demonstration purposes - you can switch over to your Gitlab server by just editing the [hosts](hosts) and adding `[yourcompanygitlab]` together with it´s IP.
 
 
 ## Prerequisites
@@ -90,7 +90,7 @@ If the server is up and running (this may take a while when doing it for the fir
 Let´s do a connection check first:
 
 ```
-ansible gitlab-ci-stack -i hostsfile -m ping
+ansible gitlab-ci-stack -i hosts -m ping
 ```
 
 If this gave a `SUCCESS`, we can move on to really execute our Ansible playbooks.
@@ -113,13 +113,13 @@ Just be sure to configure your Domain name inside [prepare-gitlab.yml](prepare-g
 and provide `providername`, `providerusername` & `providertoken` for your DNS Providers´s API in `--extra-vars` (and maybe whitelist your current Internet IP):
 
 ```
-ansible-playbook -i hostsfile prepare-gitlab.yml --extra-vars "providername=yourProviderNameHere providerusername=yourUserNameHere providertoken=yourProviderTokenHere"
+ansible-playbook -i hosts prepare-gitlab.yml --extra-vars "providername=yourProviderNameHere providerusername=yourUserNameHere providertoken=yourProviderTokenHere"
 ```
 
 Only, if you don´t use Vagrant or an only internally accessible Server, you can ignore the extra-vars - Gitlab will handle Let´s Encrypt for you then:
 
 ```
-ansible-playbook -i hostsfile prepare-gitlab.yml
+ansible-playbook -i hosts prepare-gitlab.yml
 ```
 
 If you want to know more about the installation Process, just read on:
@@ -336,7 +336,7 @@ At that point we need to use some private information about your DNS provider - 
 As you can see, all environment variables are set with the help of Ansible´s `--extra-vars` CLI like this:
 
 ```
-ansible-playbook -i hostsfile prepare-gitlab.yml --skip-tags "install_docker,install_gitlab,gitlab_runner" --extra-vars "providername=yourProviderNameHere providerusername=yourUserNameHere providertoken=yourProviderTokenHere"
+ansible-playbook -i hosts prepare-gitlab.yml --skip-tags "docker,install_gitlab,gitlab_runner" --extra-vars "providername=yourProviderNameHere providerusername=yourUserNameHere providertoken=yourProviderTokenHere"
 ```
 
 Just change `yourProviderNameHere`, `yourUserNameHere` and `yourProviderTokenHere` accordingly!

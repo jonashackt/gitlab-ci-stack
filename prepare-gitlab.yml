@@ -12,7 +12,7 @@
 
   - name: Prepare Docker on Linux node
     include_tasks: prepare-docker-ubuntu.yml
-    tags: install_docker
+    tags: docker
 
   - name: Prepare Let´s Encrypt certificates for Gitlab, if we setup an internal Server like Vagrant (you have to provide providername, providerusername & providertoken as extra-vars!)
     include_tasks: letsencrypt.yml

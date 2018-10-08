@@ -1,9 +1,7 @@
 ---
-  - name: update apt and autoremove
+  - name: update apt
     apt:
       update_cache: yes
-      cache_valid_time: 3600
-      autoremove: yes
 
   - name: Add Docker apt key
     apt_key:
