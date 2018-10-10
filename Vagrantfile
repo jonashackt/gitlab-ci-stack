@@ -10,10 +10,6 @@ Vagrant.configure("2") do |config|
     # we need to configure a private network, so that our machines are able to talk to one another
     config.vm.network "private_network", ip: "172.16.2.15"
 
-    # Forwarding the port for Ansible explicitely to not run into Vagrants 'Port Collisions and Correction'
-    # see https://www.vagrantup.com/docs/networking/forwarded_ports.html, which would lead to problems with Ansible later
-    config.vm.network "forwarded_port", guest: 22, host: 2222, host_ip: "127.0.0.1", id: "ssh"
-
     config.vm.provider :virtualbox do |virtualbox|
         virtualbox.name = "gitlab-ci-stack"
         virtualbox.gui = true
