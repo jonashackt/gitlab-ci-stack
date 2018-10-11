@@ -2,12 +2,12 @@ Vagrant.configure("2") do |config|
 
     config.vm.define "gitlab-ci-stack"
     config.vm.box = "ubuntu/bionic64"
+
     # Register domain and tld for later access prettiness (working with vagrant-dns Plugin https://github.com/BerlinVagrant/vagrant-dns)
     config.vm.hostname = "jonashackt"
     config.dns.tld = "io"
 
-    # As to https://www.vagrantup.com/docs/multi-machine/ & https://www.vagrantup.com/docs/networking/private_network.html
-    # we need to configure a private network, so that our machines are able to talk to one another
+    # Configure private network and static ip (https://www.vagrantup.com/docs/networking/private_network.html)
     config.vm.network "private_network", ip: "172.16.2.15"
 
     config.vm.provider :virtualbox do |virtualbox|
@@ -15,8 +15,7 @@ Vagrant.configure("2") do |config|
         virtualbox.gui = true
         virtualbox.memory = 4096
         virtualbox.cpus = 2
-        virtualbox.customize ["modifyvm", :id, "--ioapic", "on"]
-        virtualbox.customize ["modifyvm", :id, "--vram", "32"]
+
         # Forward DNS resolver from host (vagrant dns) to box
         virtualbox.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
     end
