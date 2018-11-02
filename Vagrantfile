@@ -20,7 +20,4 @@ Vagrant.configure("2") do |config|
         virtualbox.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
     end
 
-    # deactivate Guest additions update for now
-    config.vbguest.no_install = true
-
 end
