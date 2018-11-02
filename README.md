@@ -4,6 +4,8 @@ gitlab-ci-stack
 
 Full CI pipeline project based on Gitlab & Gitlab CI running Docker, completely automated setup by Vagrant & Ansible, providing Let´s Encrypt certificates for private Servers, multiple Gitlab-Runners and the Gitlab Container Registry
 
+[![asciicast](https://asciinema.org/a/205171.svg)](https://asciinema.org/a/205171)
+
 This project is somehow based on the thought of https://github.com/marcelbirkner/docker-ci-tool-stack. But since the good old days of Jenkins times changed "a bit". Maybe today Jenkins incl. 2.x/Pipeline-plugin isn´t the way to go - or it´s just the way, if you really want to have a hard time. Why? Here are some points:
 
 "Jenkins servers become snowflakes"
