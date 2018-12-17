@@ -757,6 +757,13 @@ https://docs.gitlab.com/ee/user/project/pages/#how-it-works
 
 You need to add a `.gitlab-ci.yml` to your new Jekyll repository, that will run the Ruby based build process of Jekyll and publish your Static site. 
 
+> You´re not forced to use Jekyll and can also use many other static site generators - have a look onto the example projects: https://gitlab.com/pages
+
+As we use Jekyll here, we simply rely on the example Jekyll project https://gitlab.com/pages/jekyll, which you can simply import into your GitLab instance (__New Project__ / __Import__ etc).
+
+
+### Deploy your first GitLab Page with Docker
+
 I have prepared a working `docker run command based on the [official ruby Docker image](https://hub.docker.com/_/ruby/), which will output the resulting site into `public` directory inside your Jekyll site:
 
 ```
