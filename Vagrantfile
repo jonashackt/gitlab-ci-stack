@@ -5,7 +5,8 @@ Vagrant.configure("2") do |config|
 
     # Register domain and tld for later access prettiness (working with vagrant-dns Plugin https://github.com/BerlinVagrant/vagrant-dns)
     config.vm.hostname = "jonashackt"
-    config.dns.tld = "io"
+    #config.dns.tld = "io"
+    config.dns.tlds = ["io", "me"]
 
     # Configure private network and static ip (https://www.vagrantup.com/docs/networking/private_network.html)
     config.vm.network "private_network", ip: "172.16.2.15"

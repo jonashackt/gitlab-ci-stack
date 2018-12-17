@@ -668,6 +668,92 @@ And there´s also the Environments tab, witch is a great view on your Pipeline. 
 
 
 
+## GitLab Pages on self-hosted GitLab-Instance
+
+GitLab supports to publish (and host) websites that are generated with a static site generator like Jekyll (https://docs.gitlab.com/ee/user/project/pages/).
+
+https://docs.gitlab.com/ee/administration/pages/index.html
+
+### Seperate Top-level domain (TLD)
+
+[As the docs state](https://docs.gitlab.com/ee/administration/pages/index.html#prerequisites):
+
+> Have an exclusive root domain for serving GitLab Pages. Note that you cannot use a subdomain of your GitLab’s instance domain.
+
+Which is mainly because of security reasons: `You should strongly consider running GitLab pages under a different hostname than GitLab to prevent XSS attacks`. GitLab and GitLab Pages would also share the same cookies and so on...
+
+That means, we cannot serve our GitLab pages under `pages.jonashackt.io`, since we already use `gitlab.jonashackt.io` with uses the same [Top-level domain](https://en.wikipedia.org/wiki/Top-level_domain).
+
+So you __have to__ register a separate domain - like `jonashackt.me`.
+
+With that we also need to configure Vagrant DNS to use multiple TLDs, which [is possible](https://github.com/BerlinVagrant/vagrant-dns#vm-options) with the `vm.dns.tlds` configuration key. Our [Vagrantfile](Vagrantfile) looks like this:
+
+```
+# instead of
+config.dns.tld = "io"
+
+# we now use
+config.dns.tlds = ["io", "me"]
+```
+
+Now we halt our machine with `vagrant halt`, if it already ran before. The we install the new TLD `me` with `vagrant dns --install`. Then we may check the DNS resolver list with:
+
+```
+scutil --dns
+```
+
+This will reveal a new resolver together with our `io` one:
+
+```
+resolver #11
+  domain   : io
+  nameserver[0] : 127.0.0.1
+  port     : 5300
+  flags    : Request A records, Request AAAA records
+  reach    : 0x00030002 (Reachable,Local Address,Directly Reachable Address)
+
+resolver #12
+  domain   : me
+  nameserver[0] : 127.0.0.1
+  port     : 5300
+  flags    : Request A records, Request AAAA records
+  reach    : 0x00030002 (Reachable,Local Address,Directly Reachable Address)
+```
+
+Now fire up our VagrantBox again with `vagrant up` and check, whether both tls domains now have valid DNS entries:
+
+```
+# GitLab TLD
+$ dscacheutil -q host -a name jonashackt.io
+name: jonashackt.io
+ip_address: 172.16.2.15
+
+# GitLab Pages TLD
+$ dscacheutil -q host -a name jonashackt.me
+name: jonashackt.me
+ip_address: 172.16.2.15
+```
+
+### Let´s Encrypt Wildcard certificates with dehydrated & lexicon
+
+Let´s Encrypt is able to issue wildcard certificates [since early 2018](https://www.heise.de/security/meldung/Let-s-Encrypt-stellt-ab-sofort-Wildcard-Zertifikate-aus-3994552.html).
+
+And our Let´s Encrypt client dehydrated is on [the list of ACME v2 supporting clients](https://letsencrypt.org/docs/client-options/), so it should be possible to [get a Wildcard certificate using dehydraded](https://github.com/lukas2511/dehydrated/blob/master/docs/domains_txt.md#wildcards):
+
+> Support for wildcards was added by the ACME v2 protocol. 
+
+With this we simply need to create an `domains.txt` file containing the following:
+
+```
+gitlab.jonashackt.io
+pages.jonashackt.me *.pages.jonashackt.me
+```
+
+
+### Create a GitLab Pages repository
+
+https://docs.gitlab.com/ee/user/project/pages/#how-it-works
+
 
 
 # Links

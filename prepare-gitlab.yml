@@ -7,6 +7,9 @@
     gitlab_url: "https://{{ gitlab_domain }}"
     gitlab_registry_url: "{{ gitlab_url }}:4567"
     gitlab_runner_count: 5
+    gitlab_pages_domain: "pages.jonashackt.me"
+    gitlab_pages_url: "https://{{ gitlab_pages_domain }}"
+
 
   tasks:
   - name: Update apt
@@ -35,8 +38,14 @@
     import_tasks: gitlab-runner.yml
     tags: runner
 
+  - name: Configure Gitlab Pages
+    import_tasks: pages.yml
+    tags: pages
+
   - name: Congratulations!
     debug:
       msg:
-        - "Your Gitlab instance is ready at {{ gitlab_url }} and the Gitlab Container Registry is waiting for your docker pushes (at {{ gitlab_registry_url}})."
+        - "Your Gitlab instance is ready at {{ gitlab_url }}"
+        - "The Gitlab Container Registry is waiting for your docker pushes at {{ gitlab_registry_url}}"
+        - "Gitlab Pages are served at {{ gitlab_pages_url }}"
         - "Just open your Browser and login!"
