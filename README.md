@@ -749,11 +749,35 @@ gitlab.jonashackt.io
 pages.jonashackt.me *.pages.jonashackt.me
 ```
 
+> Check if your DNS provider supports multiple TXT records for one domain! (see https://github.com/lukas2511/dehydrated/blob/master/docs/troubleshooting.md#dns-invalid-challenge-since-dehydrated-060--why-are-dns-challenges-deployed-first-and-verified-later)
 
 ### Create a GitLab Pages repository
 
 https://docs.gitlab.com/ee/user/project/pages/#how-it-works
 
+You need to add a `.gitlab-ci.yml` to your new Jekyll repository, that will run the Ruby based build process of Jekyll and publish your Static site. 
+
+I have prepared a working `docker run command based on the [official ruby Docker image](https://hub.docker.com/_/ruby/), which will output the resulting site into `public` directory inside your Jekyll site:
+
+```
+docker run --rm -v "$PWD":/usr/src/app -w /usr/src/app ruby:2.5 bash -c "bundle install; bundle exec jekyll build -d public"
+```
+
+Now with this it is easy to craft our `.gitlab-ci.yml`:
+
+```
+pages:
+  stage: deploy
+  script:
+  - docker run --rm -v "$PWD":/usr/src/app -w /usr/src/app ruby:2.5 bash -c "bundle install; bundle exec jekyll build -d public; ls -l"
+  artifacts:
+    paths:
+    - public
+  only:
+  - master
+```
+
+After your CI/CD pipeline ran successfully, go to __Settings/Pages__ inside your repository to find the URL where you can access your GitLab Page for this repository.
 
 
 # Links
