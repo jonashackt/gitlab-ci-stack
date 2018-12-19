@@ -674,7 +674,8 @@ GitLab supports to publish (and host) websites that are generated with a static 
 
 https://docs.gitlab.com/ee/administration/pages/index.html
 
-### Seperate Top-level domain (TLD)
+
+### Define another domain name for Pages
 
 [As the docs state](https://docs.gitlab.com/ee/administration/pages/index.html#prerequisites):
 
@@ -682,11 +683,9 @@ https://docs.gitlab.com/ee/administration/pages/index.html
 
 Which is mainly because of security reasons: `You should strongly consider running GitLab pages under a different hostname than GitLab to prevent XSS attacks`. GitLab and GitLab Pages would also share the same cookies and so on...
 
-That means, we cannot serve our GitLab pages under `pages.jonashackt.io`, since we already use `gitlab.jonashackt.io` with uses the same [Top-level domain](https://en.wikipedia.org/wiki/Top-level_domain).
+But: You don´t need a "real" root domain (which I interpret as seperate [Top-level domain](https://en.wikipedia.org/wiki/Top-level_domain) (TLD) ). I really struggled in the first place trying to use another TLD here. But we can simple serve our GitLab Pages at `pages.jonashackt.io`, which is simply another subdomain of the same top-level domain!
 
-So you __have to__ register a separate domain - like `jonashackt.me`.
-
-With that we also need to configure Vagrant DNS to use multiple TLDs, which [is possible](https://github.com/BerlinVagrant/vagrant-dns#vm-options) with the `vm.dns.tlds` configuration key. Our [Vagrantfile](Vagrantfile) looks like this:
+The great Vagrant DNS is [able to use multiple TLDs](https://github.com/BerlinVagrant/vagrant-dns#vm-options) with the `vm.dns.tlds` configuration key. Our [Vagrantfile](Vagrantfile) would then look like this:
 
 ```
 # instead of
@@ -696,13 +695,7 @@ config.dns.tld = "io"
 config.dns.tlds = ["io", "me"]
 ```
 
-Now we halt our machine with `vagrant halt`, if it already ran before. The we install the new TLD `me` with `vagrant dns --install`. Then we may check the DNS resolver list with:
-
-```
-scutil --dns
-```
-
-This will reveal a new resolver together with our `io` one:
+A `scutil --dns` would reveal a new resolver together with our `io` one:
 
 ```
 resolver #11
@@ -720,19 +713,8 @@ resolver #12
   reach    : 0x00030002 (Reachable,Local Address,Directly Reachable Address)
 ```
 
-Now fire up our VagrantBox again with `vagrant up` and check, whether both tls domains now have valid DNS entries:
+But it's nice, we don't need that here!
 
-```
-# GitLab TLD
-$ dscacheutil -q host -a name jonashackt.io
-name: jonashackt.io
-ip_address: 172.16.2.15
-
-# GitLab Pages TLD
-$ dscacheutil -q host -a name jonashackt.me
-name: jonashackt.me
-ip_address: 172.16.2.15
-```
 
 ### Let´s Encrypt Wildcard certificates with dehydrated & lexicon
 
@@ -746,25 +728,102 @@ With this we simply need to create an `domains.txt` file containing the followin
 
 ```
 gitlab.jonashackt.io
-pages.jonashackt.me *.pages.jonashackt.me
+pages.jonashackt.io *.pages.jonashackt.io
 ```
 
-> Check if your DNS provider supports multiple TXT records for one domain! (see https://github.com/lukas2511/dehydrated/blob/master/docs/troubleshooting.md#dns-invalid-challenge-since-dehydrated-060--why-are-dns-challenges-deployed-first-and-verified-later)
+> Be sure to verify if your DNS provider supports multiple TXT records for one domain! (see https://github.com/lukas2511/dehydrated/blob/master/docs/troubleshooting.md#dns-invalid-challenge-since-dehydrated-060--why-are-dns-challenges-deployed-first-and-verified-later)
 
-### Create a GitLab Pages repository
+We´re doing that right inside our [obtain-letsencrypt-certs-dehydrated-lexicon.yml](obtain-letsencrypt-certs-dehydrated-lexicon.yml) playbook using the Ansible copy module together with the `content` configuration:
 
-https://docs.gitlab.com/ee/user/project/pages/#how-it-works
+```yaml
+ # In addition to the GitLab domain, we need to issue a wildcard certificate for GitLab Pages
+  # see https://github.com/lukas2511/dehydrated/blob/master/docs/domains_txt.md#wildcards
+  # in the format service.example.com *.service.example.com
+  - name: Specify our domains
+    copy:
+      dest: "/srv/dehydrated/domains.txt"
+      content: |
+        {{ gitlab_domain }}
+        {{ gitlab_pages_domain }} *.{{ gitlab_pages_domain }}
+```
 
-You need to add a `.gitlab-ci.yml` to your new Jekyll repository, that will run the Ruby based build process of Jekyll and publish your Static site. 
+The later executed dehydrated command will pick up the `domains.txt` file and retrieve all certificates for the domains mentioned inside the file:
 
-> You´re not forced to use Jekyll and can also use many other static site generators - have a look onto the example projects: https://gitlab.com/pages
+```bash
+/srv/dehydrated/dehydrated --cron --hook /srv/dehydrated/dehydrated.default.sh --challenge dns-01 --accept-terms
+``` 
 
-As we use Jekyll here, we simply rely on the example Jekyll project https://gitlab.com/pages/jekyll, which you can simply import into your GitLab instance (__New Project__ / __Import__ etc).
+
+### Configure Pages in GitLab with Ansible
+
+Simply run all the playbooks again or
+ 
+```
+# freshly generate certificates for GitLab pages with 
+ansible-playbook -i hosts prepare-gitlab.yml --tags "letsencrypt" --extra-vars "providername=yourProviderNameHere providerusername=yourUserNameHere providertoken=yourProviderTokenHere"
+
+# then configure GitLab pages with 
+ansible-playbook -i hosts prepare-gitlab.yml --tags "pages"
+```
+
+After the successful playbook run you should be able to spot the new __Pages__ menu:
+
+![gitlab-pages](screenshots/gitlab-pages.png)
 
 
-### Deploy your first GitLab Page with Docker
 
-I have prepared a working `docker run command based on the [official ruby Docker image](https://hub.docker.com/_/ruby/), which will output the resulting site into `public` directory inside your Jekyll site:
+### A new Jekyll site
+
+There is a huge list of possible static site generators for the use with GitLab Pages. Just have a look here: https://gitlab.com/pages
+
+I took Jekyll just out because I already know it from my personal site leveraging GitHub Pages: https://github.com/jonashackt/jonashackt.github.io
+
+Using an example project would be easy - just pick https://gitlab.com/pages/jekyll and import it into your GitLab instance (__New Project__ / __Import__ etc).
+
+But for comprehensibility reasons, let´s create a new [Jeykll](https://jekyllrb.com/) project from scratch. You´ll need some steps to accomplish this, since there are prerequisites:
+ 
+```
+# you need to have a ruby installation in place:
+brew install ruby
+
+# then we need to install the packages bundler and jekyll
+gem install bundler jekyll
+```
+
+Let's create a new git repository inside GitLab:
+
+![gitlab-pages-empty-repository](screenshots/gitlab-pages-empty-repository.png)
+
+Then clone it locally and then you should be able to create a new Jekyll blog within it:
+
+```
+jekyll new blog
+```
+
+If your ruby installation didn´t work, is broken or you just don´t want to hassle with that, you could also use the Docker ruby image and do everything inside a container:
+```
+docker run --rm -v "$PWD":/usr/src/app -w /usr/src/app ruby:2.5 bash -c "gem install bundler jekyll; jekyll new blog; ls -l"
+```
+
+This will bootstrap a new Jekyll skeleton which should be buildalbe and shippable right out-of-the-box. Simply `cd` into the `blog` directory and run 
+
+```
+bundle exec jekyll serve
+```
+
+If that brings some error like `Could not find foobar-package-3.0.3 in any of the sources` you might need to install dependencies with `bundle install` or `bundle install --path vendor/bundle`.
+
+Now open your Browser and head to http://127.0.0.1:4000/ - you should see our new Blog freshly backed by Jekyll:
+
+![gitlab-pages-local-jekyll](screenshots/gitlab-pages-local-jekyll.png)
+
+
+
+### Deploy Jekyll as GitLab Pages with GitLab CI & Docker
+
+Every GitLab Pages repository needs a `.gitlab-ci.yml`, that will use GitLab CI to run the Ruby based build process of Jekyll and publish your Static site. 
+
+I have prepared a working `docker run command` based on the [official ruby Docker image](https://hub.docker.com/_/ruby/), which will output the resulting site into `public` directory inside your Jekyll site:
 
 ```
 docker run --rm -v "$PWD":/usr/src/app -w /usr/src/app ruby:2.5 bash -c "bundle install; bundle exec jekyll build -d public"
@@ -784,7 +843,22 @@ pages:
   - master
 ```
 
-After your CI/CD pipeline ran successfully, go to __Settings/Pages__ inside your repository to find the URL where you can access your GitLab Page for this repository.
+Add all the files incl. the `.gitlab-ci.yml` to your Git repository - just be sure to extend your `.gitignore` like this:
+
+```
+_site
+.sass-cache
+.jekyll-metadata
+public
+vendor
+.bundle
+```
+
+Then commit and push into GitLab. Your CI/CD pipeline should run successfully:
+
+![gitlab-pages-successful-first-jekyll-build](screenshots/gitlab-pages-successful-first-jekyll-build.png)
+
+Now go to __Settings/Pages__ inside your repository to find the URL where you can access your GitLab Page for this repository.
 
 
 # Links
