@@ -24,8 +24,15 @@
       path: /srv/dehydrated/dehydrated
       mode: "+x"
 
-  - name: Specify our internal domain
-    shell: "echo '{{ gitlab_domain }}' > /srv/dehydrated/domains.txt"
+  # In addition to the GitLab domain, we need to issue a wildcard certificate for GitLab Pages
+  # see https://github.com/lukas2511/dehydrated/blob/master/docs/domains_txt.md#wildcards
+  # in the format service.example.com *.service.example.com
+  - name: Specify our domains
+    copy:
+      dest: "/srv/dehydrated/domains.txt"
+      content: |
+        {{ gitlab_domain }}
+        {{ gitlab_pages_domain }} *.{{ gitlab_pages_domain }}
 
   - name: Install build-essential, python-dev, libffi-dev, python3-pip
     apt:
@@ -65,5 +72,11 @@
       - "{'LEXICON_{{providername|upper}}_USERNAME':'{{providerusername}}'}"
       - "{'LEXICON_{{providername|upper}}_TOKEN':'{{providertoken}}'}"
     ignore_errors: true
-
+    register: cert_generation_result
   # cron config, see https://github.com/AnalogJ/lexicon/blob/master/Dockerfile
+
+  - name: Let's see what dehydraded did
+    debug:
+      msg:
+      - "{{cert_generation_result.stdout_lines}}"
+

@@ -1,0 +1,24 @@
+---
+  # See https://docs.gitlab.com/ee/administration/pages/index.html#wildcard-domains-with-tls-support
+  - name: Configure GitLab Pages in /etc/gitlab/gitlab.rb
+    blockinfile:
+      path: /etc/gitlab/gitlab.rb
+      block: |
+        pages_external_url '{{ gitlab_pages_url }}'
+
+        pages_nginx['redirect_http_to_https'] = true
+        pages_nginx['ssl_certificate'] = "/etc/gitlab/ssl/{{ gitlab_pages_domain }}.crt"
+        pages_nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/{{ gitlab_pages_domain }}.key"
+
+      marker: "# {mark} ANSIBLE MANAGED BLOCK: GitLab Pages configuration"
+
+  - name: Reconfigure Gitlab to activate GitLab Pages
+    shell: "gitlab-ctl reconfigure"
+    register: reconfigure_result
+
+  - name: Let´s see what Omnibus/Chef does
+    debug:
+      msg:
+       - "The reconfiguration process gave the following: "
+       - "{{reconfigure_result.stdout_lines}}"
+
