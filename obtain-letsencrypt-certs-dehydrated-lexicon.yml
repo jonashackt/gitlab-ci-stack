@@ -72,5 +72,11 @@
       - "{'LEXICON_{{providername|upper}}_USERNAME':'{{providerusername}}'}"
       - "{'LEXICON_{{providername|upper}}_TOKEN':'{{providertoken}}'}"
     ignore_errors: true
-
+    register: cert_generation_result
   # cron config, see https://github.com/AnalogJ/lexicon/blob/master/Dockerfile
+
+  - name: Let's see what dehydraded did
+    debug:
+      msg:
+      - "{{cert_generation_result.stdout_lines}}"
+
