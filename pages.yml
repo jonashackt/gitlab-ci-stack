@@ -10,6 +10,8 @@
         pages_nginx['ssl_certificate'] = "/etc/gitlab/ssl/{{ gitlab_pages_domain }}.crt"
         pages_nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/{{ gitlab_pages_domain }}.key"
 
+      marker: "# {mark} ANSIBLE MANAGED BLOCK: GitLab Pages configuration"
+
   - name: Reconfigure Gitlab to activate GitLab Pages
     shell: "gitlab-ctl reconfigure"
     register: reconfigure_result
