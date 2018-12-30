@@ -13,20 +13,18 @@
   # Because this will change every time we start up Gitlab (and/or Vagrant Box/Ansible setup, see https://gitlab.com/gitlab-org/gitlab-ce/issues/3703)
   # we need to access it somehow. Sadly there´s no API atm (see https://gitlab.com/gitlab-org/gitlab-ce/issues/24030,
   # https://gitlab.com/gitlab-org/gitlab-runner/issues/1727), so we have to dive directly into the Gitlab database :(
-  - name: Extract Runner Registration Token directly from Gitlab DB
+  - name: Extract Runner Registration Token directly from gitlab-rails console
     become: true
-    become_user: gitlab-psql
-    vars:
-        ansible_ssh_pipelining: true
-        query: "SELECT runners_registration_token FROM application_settings ORDER BY id DESC LIMIT 1"
-        psql_exec: "/opt/gitlab/embedded/bin/psql"
-        gitlab_db_name: "gitlabhq_production"
-    shell: '{{ psql_exec }} -h /var/opt/gitlab/postgresql/ -d {{ gitlab_db_name }} -t -A -c "{{ query }}"'
+    shell: |
+      echo "Gitlab::CurrentSettings.current_application_settings.runners_registration_token" |
+      gitlab-rails console --environment=production
     register: gitlab_runner_registration_token_result
 
-  - name: Extracting the Token from the Gitlab SQL query response
+  - name: Parse token from response
     set_fact:
-      gitlab_runner_registration_token: "{{gitlab_runner_registration_token_result.stdout}}"
+      gitlab_runner_registration_token: "{{ gitlab_runner_registration_token_result.stdout | regex_search(regexp, '\\1') | list | first }}"
+    vars:
+      regexp: 'runners_registration_token\n\"([^\"]+)'
 
   - name: And the Token is...
     debug:
