@@ -780,11 +780,20 @@ I took Jekyll just out because I already know it from my personal site leveragin
 
 Using an example project would be easy - just pick https://gitlab.com/pages/jekyll and import it into your GitLab instance (__New Project__ / __Import__ etc).
 
-But for comprehensibility reasons, let´s create a new [Jeykll](https://jekyllrb.com/) project from scratch. You´ll need some steps to accomplish this, since there are prerequisites:
- 
+But for comprehensibility reasons, let´s create a new [Jeykll](https://jekyllrb.com/) project from scratch. You´ll need some steps to accomplish this, since there are prerequisites (I'am using a Mac here, see this page for other OSses: https://jekyllrb.com/docs/installation/#requirements)
+
+> make sure your ruby installation works and doesn´t interfer with Apple's system-wide ruby installation (which will lead to bad errors!)
+
 ```
 # you need to have a ruby installation in place:
 brew install ruby
+
+# be sure to use the correct (brew installed) ruby version on your Mac - and not the system wide Apple version!
+# therefore upgrade your user/.bash_profile file with adding:
+export PATH="/usr/local/opt/ruby/bin:$PATH"
+
+# upgrade to latest RubyGems (don´t do this with sudo(!), which would again alter your system wide Apple ruby version)
+gem update --system
 
 # then we need to install the packages bundler and jekyll
 gem install bundler jekyll
