@@ -589,7 +589,7 @@ To register the Gitlab Docker Runner in [non-interactive mode](https://gitlab.co
   # and this for non-interactive mode:
   # https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/commands/README.md#non-interactive-registration
   - name: Register Gitlab-Runners using shell executor
-    shell: "gitlab-runner register --non-interactive --url '{{gitlab_url}}' --registration-token '{{gitlab_runner_registration_token}}' --description 'shell-runner-{{ item }}' --executor shell"
+    shell: "gitlab-runner register --non-interactive --url '{{gitlab_url}}' --registration-token '{{gitlab_runner_registration_token}}' --description 'shell-runner-{{ item }}' --executor shell --tag-list shell"
     loop: "{{ range(1,gitlab_runner_count + 1)|list }}"
 ```
 
@@ -607,11 +607,42 @@ A downside of the Docker-in-Docker approach is also the usage of `--docker-privi
 
 ```
   - name: Register Gitlab-Runners using docker executor too
-    shell: "gitlab-runner register --non-interactive --url '{{gitlab_url}}' --registration-token '{{gitlab_runner_registration_token}}' --description 'docker-in-docker-runner-{{ item }}' --executor docker --docker-image 'docker:19.03.1' --docker-privileged --docker-volumes '/certs/client'"
+    shell: "gitlab-runner register --non-interactive --url '{{gitlab_url}}' --registration-token '{{gitlab_runner_registration_token}}' --description 'docker-in-docker-runner-{{ item }}' --executor docker --docker-image 'docker:19.03.1' --docker-privileged --docker-volumes '/certs/client' --tag-list dind"
     loop: "{{ range(1,gitlab_runner_count + 1)|list }}"
 
 ```
 
+#### Configure .gitlab-ci.yml Jobs to run only on specific gitlab-runners
+
+As we register our gitlab-runners with tags like `dind` and `shell` - as we can see inside the runners configuration in the GitLab GUI also:
+
+![gitlab-runners-with-tags](screenshots/gitlab-runners-with-tags.png)
+
+So we can now configure our GitLab CI jobs to only run on these specific gitlab-runners - see https://docs.gitlab.com/ee/ci/yaml/#tags:
+
+Use gitlab-runner 'shell':
+
+```
+build-image:
+  stage: build
+  tags: 
+    - shell
+  script:
+    - mvn clean install
+```
+
+Or use gitlab-runner 'dind':
+
+```
+build-image:
+  stage: build
+  tags: 
+    - dind
+  script:
+    - mvn clean install
+```
+
+and the Jobs will only be picked by the specifically tagges runners.
 
 
 ### Using the Gitlab Container Registry
