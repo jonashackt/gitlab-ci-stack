@@ -13,7 +13,7 @@ Vagrant.configure("2") do |config|
     config.vm.provider :virtualbox do |virtualbox|
         virtualbox.name = "gitlab-ci-stack"
         #virtualbox.gui = true
-        virtualbox.memory = 4096
+        virtualbox.memory = 3072
         virtualbox.cpus = 2
 
         # Forward DNS resolver from host (vagrant dns) to box

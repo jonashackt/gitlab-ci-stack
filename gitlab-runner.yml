@@ -41,11 +41,16 @@
       append: yes
     become: true
 
-  # see https://docs.gitlab.com/ce/ci/docker/using_docker_images.html#register-docker-runner
+  # see https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-shell-executor
   # and this for non-interactive mode:
   # https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/commands/README.md#non-interactive-registration
   - name: Register Gitlab-Runners using shell executor
     shell: "gitlab-runner register --non-interactive --url '{{gitlab_url}}' --registration-token '{{gitlab_runner_registration_token}}' --description 'shell-runner-{{ item }}' --executor shell"
+    loop: "{{ range(1,gitlab_runner_count + 1)|list }}"
+
+  # see https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-docker-in-docker-workflow-with-docker-executor
+  - name: Register Gitlab-Runners using docker executor too
+    shell: "gitlab-runner register --non-interactive --url '{{gitlab_url}}' --registration-token '{{gitlab_runner_registration_token}}' --description 'docker-in-docker-runner-{{ item }}' --executor docker --docker-image 'docker:19.03.1' --docker-privileged --docker-volumes '/certs/client'"
     loop: "{{ range(1,gitlab_runner_count + 1)|list }}"
 
   # number of concurrent runners needs to be set directly in config-file in order to actually run jobs in parallel

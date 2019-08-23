@@ -576,9 +576,41 @@ Before we´re able to register the Runner, we need to extract the Registration T
     register: gitlab_runner_registration_token_result
 ```
 
-The last step then is to register the Gitlab Docker Runner in [non-interactive mode](https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/commands/README.md#non-interactive-registration).
+As [the docs state](https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#runner-configuration):
 
+> There are three methods to enable the use of docker build and docker run during jobs; each with their own tradeoffs.
 
+As "The simplest approach is to install GitLab Runner in shell execution mode", we use the `shell` executor for our setup primarily:
+
+To register the Gitlab Docker Runner in [non-interactive mode](https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/commands/README.md#non-interactive-registration), we do the following inside our playbook:
+
+```
+  # see https://docs.gitlab.com/ce/ci/docker/using_docker_images.html#register-docker-runner
+  # and this for non-interactive mode:
+  # https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/commands/README.md#non-interactive-registration
+  - name: Register Gitlab-Runners using shell executor
+    shell: "gitlab-runner register --non-interactive --url '{{gitlab_url}}' --registration-token '{{gitlab_runner_registration_token}}' --description 'shell-runner-{{ item }}' --executor shell"
+    loop: "{{ range(1,gitlab_runner_count + 1)|list }}"
+```
+
+__Attention!__ Do not confuse these runner configurations with the "Non-Docker-in-Docker" gitlab-runner also named "docker"!
+
+If you don't want to go with the flexible and locally testable solution using a Dockerfile and docker commands directly inside your `.gitlab-ci.yml` (be aware of the fact, that you can't develop your pipeline locally right now because of the missing pieces in the `gitlab-runner exec` implementation! (see https://gist.github.com/jonashackt/2cfbf366a6a6b70a78068ab043edb8f7 for details)), then there's another - sadly widly used - way of how to register GitLab runners described here: https://docs.gitlab.com/ce/ci/docker/using_docker_images.html#register-docker-runner __But as with its predecessors like Jenkins, GitLab must not be the goto CI solution in the future - and if you want to be able to change your CI system fast, I would advice you to NOT USE this way of GitLab CI!__.
+
+#### Configure a Docker-in-Docker enabled gitlab-runner with the docker executor
+
+The second option on how to use standard Docker commands inside your `.gitlab-ci.yml`, is to use Docker-in-Docker (Dind) gitlab-runners - see https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-docker-in-docker-workflow-with-docker-executor
+
+Therefore we register our Dind runner like this - [incl. TLS enablement](https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#tls-enabled) mounting the host certs therefore with ` --docker-volumes '/certs/client'` and as stated in the docs we also pin to `--docker-image 'docker:19.03.1'` the Docker version to prevent "unpredictable behavior, especially when new versions are released".
+
+A downside of the Docker-in-Docker approach is also the usage of `--docker-privileged`, which can lead to security implications because we disable the security mechanisms of containers:
+
+```
+  - name: Register Gitlab-Runners using docker executor too
+    shell: "gitlab-runner register --non-interactive --url '{{gitlab_url}}' --registration-token '{{gitlab_runner_registration_token}}' --description 'docker-in-docker-runner-{{ item }}' --executor docker --docker-image 'docker:19.03.1' --docker-privileged --docker-volumes '/certs/client'"
+    loop: "{{ range(1,gitlab_runner_count + 1)|list }}"
+
+```
 
 
 
