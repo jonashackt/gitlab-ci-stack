@@ -592,6 +592,8 @@ As "The simplest approach is to install GitLab Runner in shell execution mode", 
                                     |                   uses                 |
                                     |                                        |
                                     |            HOST Docker-engine          |
+                                    |                                        |
+                                    |       with local image repository      |                                                                    
                                     +----------------------------------------+
 ```
 
@@ -632,9 +634,13 @@ Using this option, __the setup get's much more complex!__ In [this issue Tomasz 
 |                                              |---------------->|                                              |
 | /       #containers root directory           | srvs_cnt:docker | /       #containers root directory           |
 | /builds # builds directory mounted from host |                 | /builds # builds directory mounted from host |
-+----------------------------------------------+                 +----------------------------------------------+
+|                                              |                 +----------------------------------------------+
+|    with container local image repository     | 
++----------------------------------------------+                 
 
 ```
+
+There is also [a good blog post on the fallacies of Docker-in-Docker](https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/). If you still want to go that way though, read on.
 
 Therefore we register our Dind runner like this - [incl. TLS enablement](https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#tls-enabled) mounting the host certs therefore with ` --docker-volumes '/certs/client'` and as stated in the docs we also pin to `--docker-image 'docker:19.03.1'` the Docker version to prevent "unpredictable behavior, especially when new versions are released".
 
@@ -775,13 +781,13 @@ Now we´re nearly there. Just add a new password for the root user and login wit
 
 ![import-project](screenshots/import-project.png)
 
-Paste the example Projects git URL into __Git repository URL__ field: `https://github.com/jonashackt/restexamples.git`, change Visibility Level to __Internal__ and hit __Create Project__.
+Paste the example Projects git URL into __Git repository URL__ field: `https://github.com/jonashackt/gitlab-ci-shell-example.git`, change Visibility Level to __Internal__ and hit __Create Project__.
 
 Now at __CI / CD__ / __Pipelines__ fire up the Pipeline once (only this time manually since we didn´t push something new) and it should build a simple Spring Boot example project and push the resulting Image into our branch new Gitlab Container Registry:
 
 ![successful-first-pipeline-run](screenshots/successful-first-pipeline-run.png)
 
-The example project [restexamples](https://github.com/jonashackt/restexamples) has a [prepared .gitlab-ci.yml already](https://github.com/jonashackt/restexamples/blob/master/.gitlab-ci.yml), so it should do everything smoothly:
+The example project [gitlab-ci-shell-example](https://github.com/jonashackt/gitlab-ci-shell-example) has a [prepared .gitlab-ci.yml already](https://github.com/jonashackt/gitlab-ci-shell-example/blob/master/.gitlab-ci.yml), so it should do everything smoothly:
 
 ```
 # One of the new trends in Continuous Integration/Deployment is to:
@@ -828,8 +834,6 @@ deploy-2-dev:
   environment:
     name: dev
     url: https://dev.jonashackt.io
-
-
 ```
 
 And you should be able to see your newly pushed Image in the Gitlab Registry overview:
