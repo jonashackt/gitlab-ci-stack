@@ -577,7 +577,7 @@ Before we´re able to register the Runner, we need to extract the Registration T
 ```
 
 
-## Configure Gitlab Runner
+## Configure Gitlab Runner with shell executor
 
 As [the docs state](https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#runner-configuration):
 
@@ -613,7 +613,7 @@ __Attention!__ Do not confuse these runner configurations with the "Non-Docker-i
 If you don't want to go with the flexible and locally testable solution using a Dockerfile and docker commands directly inside your `.gitlab-ci.yml` (be aware of the fact, that you can't develop your pipeline locally right now because of the missing pieces in the `gitlab-runner exec` implementation! (see https://gist.github.com/jonashackt/2cfbf366a6a6b70a78068ab043edb8f7 for details)), then there's another - sadly widly used - way of how to register GitLab runners described here: https://docs.gitlab.com/ce/ci/docker/using_docker_images.html#register-docker-runner __But as with its predecessors like Jenkins, GitLab must not be the goto CI solution in the future - and if you want to be able to change your CI system fast, I would advice you to NOT USE this way of GitLab CI!__.
 
 
-#### Configure a Docker-in-Docker enabled gitlab-runner with the docker executor
+### Configure a Docker-in-Docker enabled gitlab-runner with the docker executor
 
 The second option on how to use standard Docker commands inside your `.gitlab-ci.yml`, is to use Docker-in-Docker (Dind) gitlab-runners - see https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-docker-in-docker-workflow-with-docker-executor
 
@@ -653,7 +653,7 @@ A downside of the Docker-in-Docker approach is also the usage of `--docker-privi
 
 ```
 
-#### Changes needed in .gitlab-ci.yml for Docker-in-Docker compared to using a shell runner
+### Changes needed in .gitlab-ci.yml for Docker-in-Docker compared to using a shell runner
 
 The example project https://github.com/jonashackt/gitlab-ci-dind-example provides a fully comprehensible example on how to use the Docker-in-Docker GitLab runner inside a [.gitlab-ci.yml](https://github.com/jonashackt/gitlab-ci-dind-example/blob/master/.gitlab-ci.yml):
 
@@ -726,10 +726,35 @@ To speed up building speed, it's a good advice to use the overlayfs driver with 
 
 Using `DOCKER_TLS_CERTDIR: "/certs"` tells Docker-in-Docker where to find the Docker generated certificates and establish a secured TLS connection to the Daemon.
 
-The last step is to use `tags` to define the correct Gitlab runner for the `dind` jobs (see next paragraph).
+The last step is to use `tags` to define the correct Gitlab runner for the `dind` jobs (see `Configure .gitlab-ci.yml Jobs to run only on specific gitlab-runners` paragraph).
 
 
-#### Configure .gitlab-ci.yml Jobs to run only on specific gitlab-runners
+### Configure a Docker socket binding enabled gitlab-runner with the docker executor
+
+The [third option to to enable the use of docker build and docker run during jobs is to a Docker socket binding](https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-docker-socket-binding). It's also [often referred to a the "better Docker-in-Docker" option](https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/).
+
+So let's also configure 2 GitLab runners with Docker socket binding enabled. We don't need to use `--docker-privileged` here, we just need to bind-mount the Docker socket:
+
+```
+  - name: Register Gitlab-Runners using docker executor too
+    shell: "gitlab-runner register --non-interactive --url '{{gitlab_url}}' --registration-token '{{gitlab_runner_registration_token}}' --description 'docker-socket-runner-{{ item }}' --executor docker --docker-image 'docker:stable' --docker-volumes /var/run/docker.sock:/var/run/docker.sock --tag-list socket"
+    loop: "{{ range(1,gitlab_runner_count + 1)|list }}"
+
+```
+
+We also tag this runner as the `socket` one, so we can explicitly let our Jobs run on that one.
+
+
+### Changes needed in .gitlab-ci.yml for Docker-in-Docker compared to using a shell runner
+
+The example project https://github.com/jonashackt/gitlab-ci-docker-socket-binding-example provides a fully comprehensible example on how to use the a Docker socket bound GitLab runner inside a [.gitlab-ci.yml](https://github.com/jonashackt/gitlab-ci-dind-example/blob/master/.gitlab-ci.yml):
+
+```
+
+```
+
+
+### Configure .gitlab-ci.yml Jobs to run only on specific gitlab-runners
 
 As we register our gitlab-runners with tags like `dind` and `shell` - as we can see inside the runners configuration in the GitLab GUI also:
 
