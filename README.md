@@ -750,8 +750,43 @@ We also tag this runner as the `socket` one, so we can explicitly let our Jobs r
 The example project https://github.com/jonashackt/gitlab-ci-docker-socket-binding-example provides a fully comprehensible example on how to use the a Docker socket bound GitLab runner inside a [.gitlab-ci.yml](https://github.com/jonashackt/gitlab-ci-dind-example/blob/master/.gitlab-ci.yml):
 
 ```
+# see https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-docker-socket-binding
+image: docker:stable
 
+# One of the new trends in Continuous Integration/Deployment is to:
+# (see https://docs.gitlab.com/ee/ci/docker/using_docker_build.html)
+#
+# 1. Create an application image
+# 2. Run tests against the created image
+# 3. Push image to a remote registry
+# 4. Deploy to a server from the pushed image
+
+stages:
+  - build
+  - test
+  - push
+  - deploy
+
+# see usage of Namespaces at https://docs.gitlab.com/ee/user/group/#namespaces
+variables:
+  REGISTRY_GROUP_PROJECT: $CI_REGISTRY/root/gitlab-ci-shell-example
+
+# see how to login at https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#using-the-gitlab-container-registry
+before_script:
+  - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+
+build-image:
+  stage: build
+  # the tag 'shell' advices only GitLab runners using this tag to pick up that job
+  tags:
+    - socket
+  script:
+    - docker build . --tag $REGISTRY_GROUP_PROJECT/gitlab-ci-shell-example:latest
+
+...
 ```
+
+There are only 2 differences to the shell runner needed here: Using `image: docker:stable` as the image for this pipeline and defining `socket` tag so that GitLab will only pick the correct Docker socket binding enabled runners for these jobs.
 
 
 ### Configure .gitlab-ci.yml Jobs to run only on specific gitlab-runners
