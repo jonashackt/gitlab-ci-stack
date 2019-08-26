@@ -551,7 +551,7 @@ With this, we also don´t need to use the `--tls-ca-file` option to configure ou
 
 
 
-## Install & configure Gitlab Docker Runner
+## Install Gitlab Runner
 
 The [gitlab-runner.yml](gitlab-runner.yml) shows how to install and register the Gitlab Docker Runner in non-interactive mode:
 
@@ -576,11 +576,24 @@ Before we´re able to register the Runner, we need to extract the Registration T
     register: gitlab_runner_registration_token_result
 ```
 
+
+## Configure Gitlab Runner
+
 As [the docs state](https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#runner-configuration):
 
 > There are three methods to enable the use of docker build and docker run during jobs; each with their own tradeoffs.
 
-As "The simplest approach is to install GitLab Runner in shell execution mode", we use the `shell` executor for our setup primarily:
+As "The simplest approach is to install GitLab Runner in shell execution mode", we use the `shell` executor for our setup primarily. The following ASCII art shows the simplicity of this approach:
+
+```
+                                    +----------------------------------------+
+                                    |               shell runner             |
+                                    |                                        |
+                                    |                   uses                 |
+                                    |                                        |
+                                    |            HOST Docker-engine          |
+                                    +----------------------------------------+
+```
 
 To register the Gitlab Docker Runner in [non-interactive mode](https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/commands/README.md#non-interactive-registration), we do the following inside our playbook:
 
@@ -597,9 +610,31 @@ __Attention!__ Do not confuse these runner configurations with the "Non-Docker-i
 
 If you don't want to go with the flexible and locally testable solution using a Dockerfile and docker commands directly inside your `.gitlab-ci.yml` (be aware of the fact, that you can't develop your pipeline locally right now because of the missing pieces in the `gitlab-runner exec` implementation! (see https://gist.github.com/jonashackt/2cfbf366a6a6b70a78068ab043edb8f7 for details)), then there's another - sadly widly used - way of how to register GitLab runners described here: https://docs.gitlab.com/ce/ci/docker/using_docker_images.html#register-docker-runner __But as with its predecessors like Jenkins, GitLab must not be the goto CI solution in the future - and if you want to be able to change your CI system fast, I would advice you to NOT USE this way of GitLab CI!__.
 
+
 #### Configure a Docker-in-Docker enabled gitlab-runner with the docker executor
 
 The second option on how to use standard Docker commands inside your `.gitlab-ci.yml`, is to use Docker-in-Docker (Dind) gitlab-runners - see https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-docker-in-docker-workflow-with-docker-executor
+
+Using this option, __the setup get's much more complex!__ In [this issue Tomasz Maczukin explains the setup very well](https://gitlab.com/gitlab-org/gitlab-ce/issues/41227):
+
+```
+                                    +----------------------------------------+
+                                    |     HOST (docker-engine 1st level)     |
+                                    |                                        |
+                                    | /volume/for/builds # this is mounted   |
+                                    |                      to all containers |
+                                    |                      related to a job  |
+                                    +----------------------------------------+
+                                         ^                             ^
+                                         |                             |
++----------------------------------------------+                 +----------------------------------------------+
+|             docker:dind container            |       link      |         job container (docker:latest)        |
+|                                              |---------------->|                                              |
+| /       #containers root directory           | srvs_cnt:docker | /       #containers root directory           |
+| /builds # builds directory mounted from host |                 | /builds # builds directory mounted from host |
++----------------------------------------------+                 +----------------------------------------------+
+
+```
 
 Therefore we register our Dind runner like this - [incl. TLS enablement](https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#tls-enabled) mounting the host certs therefore with ` --docker-volumes '/certs/client'` and as stated in the docs we also pin to `--docker-image 'docker:19.03.1'` the Docker version to prevent "unpredictable behavior, especially when new versions are released".
 
