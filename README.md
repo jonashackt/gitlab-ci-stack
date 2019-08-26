@@ -786,7 +786,7 @@ build-image:
 ...
 ```
 
-There are only 2 differences to the shell runner needed here: Using `image: docker:stable` as the image for this pipeline and defining `socket` tag so that GitLab will only pick the correct Docker socket binding enabled runners for these jobs.
+Besides the project name, there are only 2 differences to the shell runner needed here: Using `image: docker:stable` as the image for this pipeline and defining `socket` tag so that GitLab will only pick the correct Docker socket binding enabled runners for these jobs.
 
 
 ### Configure .gitlab-ci.yml Jobs to run only on specific gitlab-runners
