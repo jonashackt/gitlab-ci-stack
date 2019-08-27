@@ -19,6 +19,40 @@ I heard from so many colleagues:
 
 > "Hey Jonas you Jenkins fanboy. Have a look on all those cool new CI servers like Concourse, Circle CI oder even Gitlab CI! We don´t know, why you´re messing around with Jenkins..." .
 
+
+## Table of Contents  
+* [Which one to choose?](#which-one-to-choose)
+* [Gitlab CI](#gitlab-ci)
+* [Why not just use Docker Compose to fire everything up?](#why-not-just-use-docker-compose-to-fire-everything-up)
+* [Prerequisites](#prerequisites)
+* [Let´s install & run Gitlab inside our Server/VagrantBox with Ansible](#lets-install--run-gitlab-inside-our-servervagrantbox-with-ansible)
+* [Install & Configure Docker](#install--configure-docker)
+* [Nice Gitlab URL with DNS configuration](#nice-gitlab-url-with-dns-configuration)
+* [Enable https for Gitlab on public accessable server](#enable-https-for-gitlab-on-public-accessable-server)
+* [Let´s Encrypt for our Gitlab on VirtualBox/Vagrant](#lets-encrypt-for-our-gitlab-on-virtualboxvagrant)
+* [Configure the "self-created" Let´s Encrypt certificates in Gitlab (it´s the same process for other certificates then Let´s Encrypt)](#configure-the-self-created-lets-encrypt-certificates-in-gitlab-its-the-same-process-for-other-certificates-then-lets-encrypt)
+* [Install Gitlab itself](#install-gitlab-itself)
+* [Gitlab Container Registry](#gitlab-container-registry)
+* [Ubuntu & Docker don´t know Let´s Encrypt so we need to copy the fullchain.pem instead of just the cert.pem!](#ubuntu--docker-dont-know-lets-encrypt-so-we-need-to-copy-the-fullchainpem-instead-of-just-the-certpem)
+* [Install Gitlab Runner](#install-gitlab-runner)
+* [Configure Gitlab Runner with shell executor](#configure-gitlab-runner-with-shell-executor)
+* [Configure a Docker-in-Docker enabled gitlab-runner with the docker executor](#configure-a-docker-in-docker-enabled-gitlab-runner-with-the-docker-executor)
+* [Changes needed in .gitlab-ci.yml for Docker-in-Docker compared to using a shell runner](#changes-needed-in-gitlab-ciyml-for-docker-in-docker-compared-to-using-a-shell-runner)
+* [Configure a Docker socket binding enabled gitlab-runner with the docker executor](#configure-a-docker-socket-binding-enabled-gitlab-runner-with-the-docker-executor)
+* [Changes needed in .gitlab-ci.yml for Docker-in-Docker compared to using a shell runner](#changes-needed-in-gitlab-ciyml-for-docker-in-docker-compared-to-using-a-shell-runner-1)
+* [Configure .gitlab-ci.yml Jobs to run only on specific gitlab-runners](#configure-gitlab-ciyml-jobs-to-run-only-on-specific-gitlab-runners)
+* [Using the Gitlab Container Registry](#using-the-gitlab-container-registry)
+* [Namespaces (username, group or subgroup)](#namespaces-username-group-or-subgroup)
+* [Import example project with .gitlab-ci.yml and run Gitlab CI pipeline](#import-example-project-with-gitlab-ciyml-and-run-gitlab-ci-pipeline)
+* [GitLab Pages on self-hosted GitLab-Instance](#gitlab-pages-on-self-hosted-gitlab-instance)
+* [Define another domain name for Pages](#define-another-domain-name-for-pages)
+* [Let´s Encrypt Wildcard certificates with dehydrated & lexicon](#lets-encrypt-wildcard-certificates-with-dehydrated--lexicon)
+* [Configure Pages in GitLab with Ansible](#configure-pages-in-gitlab-with-ansible)
+* [A new Jekyll site](#a-new-jekyll-site)
+* [Deploy Jekyll as GitLab Pages with GitLab CI & Docker](#deploy-jekyll-as-gitlab-pages-with-gitlab-ci--docker)
+* [Links](#links)
+
+
 ## Which one to choose?
 
 Well, ok then. Let´s give it a try. And because of all this here:
