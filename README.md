@@ -617,6 +617,8 @@ As [the docs state](https://docs.gitlab.com/ee/ci/docker/using_docker_build.html
 
 > There are three methods to enable the use of docker build and docker run during jobs; each with their own tradeoffs.
 
+__Don't get confused:__ those three methods could be either applied to a the GitLab runner package installed directly on the host OS - or as an alternative to a GitLab runner pre-installed inside [a GitLab-provided Docker image called gitlab/gitlab-runner](https://hub.docker.com/r/gitlab/gitlab-runner/) - [see the docs for details](https://docs.gitlab.com/runner/register/#one-line-registration-command)
+
 As "The simplest approach is to install GitLab Runner in shell execution mode", we use the `shell` executor for our setup primarily. The following ASCII art shows the simplicity of this approach:
 
 ```
