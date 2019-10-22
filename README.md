@@ -113,7 +113,13 @@ Now be sure to add your domain name into the [Vagrantfile](Vagrantfile). As I ow
 ```
     config.vm.hostname = "jonashackt"
     config.dns.tld = "io"
-``` 
+```
+
+Be sure to configure your local DNS with:
+
+```
+vagrant dns --install
+```
 
 That´s all, we´re ready to fire up our server with:
 
